@@ -1,0 +1,98 @@
+.hzntl-carousel-container {
+	position: relative;
+	/* height: 100%; */
+}
+
+.hzntl-carousel-container__radio-grp {
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
+	bottom: 10%;
+	visibility: hidden;
+}
+
+.hzntl-carousel-container__radio-grp--hidden {
+	visibility: hidden;
+}
+
+.vert-carousel-container__last-slide {
+	display: grid;
+	grid-auto-rows: 1fr;
+	place-items: center;
+}
+
+.vert-carousel-container__last-slide__newsletter-para {
+	align-self: flex-end;
+	margin-bottom: 1rem;
+	font-size: var(--root-font-size-1-l);
+}
+
+.vert-carousel-container__last-slide__social-links-container {
+	font-size: var(--root-font-size-4);
+	margin-top: 4rem;
+	text-transform: uppercase;
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	justify-items: center;
+}
+
+.social-links-container__social-link {
+	display: block;
+	padding: 0.5rem;
+	text-transform: uppercase;
+}
+
+.social-links-container__social-link--active-social-link {
+	font-weight: var(--font-weight-bold-1);
+}
+
+.social-links-container__social-link:nth-last-child(2) {
+	grid-column-start: 2;
+}
+
+.vert-carousel-container__last-slide__additional-info {
+	font-size: var(--root-font-size-6);
+	font-weight: var(--font-weight-light);
+	text-transform: uppercase;
+	word-spacing: 3px;
+	align-self: flex-end;
+	justify-self: flex-start;
+	margin-bottom: 2.5rem;
+	margin-left: 3rem;
+	line-height: 0.75rem;
+}
+
+@media (min-width: 768px) {
+	.hzntl-carousel-container__radio-grp {
+		visibility: initial;
+	}
+
+	.vert-carousel-container__last-slide {
+		grid-template-rows: 2fr 1fr 1fr;
+	}
+
+	.vert-carousel-container__last-slide__newsletter-para {
+		font-size: var(--root-font-size-1);
+		font-weight: var(--font-weight-light);
+	}
+
+	.vert-carousel-container__last-slide__social-links-container {
+		grid-template-columns: repeat(6, 1fr);
+		font-size: var(--root-font-size-5);
+		margin-top: initial;
+	}
+
+	.social-links-container__social-link {
+		padding-inline: 0.3rem;
+	}
+
+	.social-links-container__social-link:nth-last-child(2) {
+		grid-column-start: initial;
+	}
+
+	.vert-carousel-container__last-slide__additional-info {
+		font-size: var(--root-font-size-7);
+		margin-left: 11rem;
+		margin-bottom: 3.5rem;
+	}
+}

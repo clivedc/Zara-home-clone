@@ -1,0 +1,137 @@
+/* :root {
+	--carousel-animation-timing-function: ease-out;
+	--carousel-animation-duration: 700ms;
+	--carousel-animation-delay: 0ms;
+	--carousel-video-height: 100%;
+} */
+
+/* * {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+} */
+@import "../../Index.css";
+
+.carousel-container {
+	width: 100vw;
+	height: 100vh;
+	position: relative;
+	overflow: hidden;
+}
+
+.slides-container {
+	--grid-items-in-view: 1;
+	--grid-gap: 0px;
+	--grid-gutters-in-view: calc(var(--grid-items-in-view) - 1);
+	/*---item width---*/
+	--grid-column-or-row-width: calc(
+		(100% - var(--grid-gutters-in-view) * var(--grid-gap)) /
+			var(--grid-items-in-view)
+	);
+	height: 100%;
+	display: grid;
+	gap: var(--grid-gap);
+	grid-auto-flow: column;
+	/* grid-auto-columns: 100%; */
+	grid-auto-columns: var(--grid-column-or-row-width);
+	/* grid-auto-rows: 100%; */
+	grid-auto-rows: var(--grid-column-or-row-width);
+	/* transition: transform 100ms; */
+	touch-action: pinch-zoom;
+	will-change: transform;
+}
+
+.slide-media-img {
+	object-fit: cover;
+	width: 100%;
+	height: 100%;
+}
+
+.slide-media-video {
+	/* display: block; */
+	/* margin: auto; */
+	object-fit: cover;
+	max-width: 100%;
+	height: 100%;
+}
+
+.slide {
+	/* position: absolute; */
+	width: 100%;
+	height: 100%;
+	text-shadow: none;
+}
+
+.prev-btn,
+.next-btn {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	display: flex;
+	align-items: center;
+	visibility: hidden;
+}
+
+.next-btn {
+	right: 0;
+}
+
+.prev-btn-arrow,
+.next-btn-arrow {
+	transition: transform 800ms;
+}
+
+.prev-btn:hover .prev-btn-arrow {
+	transform: translateX(-20%);
+}
+
+.next-btn:hover .next-btn-arrow {
+	transform: translateX(20%);
+}
+
+button:disabled,
+button[disabled] {
+	visibility: hidden;
+}
+
+.carousel-dots-container {
+	/* --container-opacity-value: 1; */
+	position: absolute;
+	bottom: 0;
+	left: 50%;
+	display: flex;
+	gap: 0.8rem;
+	width: max-content;
+	margin: 1.5rem;
+	transform: translateX(-50%);
+	/* opacity: var(--container-opacity-value); */
+	/* transition: opacity 250ms; */
+}
+
+/* .carousel-dots-container--visible {
+	opacity: 1;
+} */
+
+.carousel-dots-label {
+	text-transform: uppercase;
+}
+
+/*------------------------------media queries-----------------------------------------------------*/
+
+@media (orientation: landscape) {
+	.slide-media-video {
+		object-fit: contain;
+		height: auto;
+	}
+}
+
+@media (min-width: 768px) {
+	.next-btn,
+	.prev-btn {
+		visibility: initial;
+	}
+
+	.carousel-dots-label {
+		visibility: hidden;
+	}
+}
