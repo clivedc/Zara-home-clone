@@ -7,7 +7,7 @@ import React, {
 } from "react";
 // import { NavLink } from "react-router-dom";
 import Carousel, { CarouselOptionsType } from "../Carousel/Carousel";
-import { useCategoryContext } from "../Header/Header";
+// import { useCategoryContext } from "../Header/Header";
 import RadioBtn from "../RadioBtn/RadioBtn";
 import RadioGroup from "../RadioBtn/RadioGroup";
 import Video from "../Video Component/Video";
@@ -17,8 +17,13 @@ import {
 } from "./utils";
 import "./Home.css";
 
+interface HomePropsType {
+	category: string | undefined;
+	setHeaderLogoColor: React.Dispatch<React.SetStateAction<"black" | "white">>;
+}
+
 //component--------------------------------------------------------------------------------------
-const Home = () => {
+const Home = ({ category, setHeaderLogoColor }: HomePropsType) => {
 	//state variables------------------------------------------------------------------
 
 	const [settingActiveSlideNoWOMAN, set_SettingActiveSlideNoWOMAN] = useState<
@@ -46,7 +51,7 @@ const Home = () => {
 	const [verticalCarouselLastSlide] = useState<JSX.Element>(
 		setVerticalCarouselLastSlide
 	);
-	const { category, setHeaderLogoColor } = useCategoryContext();
+	// const { category, setHeaderLogoColor } = useCategoryContext();
 	const [verticalCarouselDotsWithLabels] = useState(
 		setVerticalCarouselDotsWithLabels
 	);

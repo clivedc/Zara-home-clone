@@ -1,7 +1,6 @@
 import React, {
 	ComponentProps,
 	memo,
-	ReactElement,
 	useCallback,
 	useEffect,
 	useLayoutEffect,
@@ -13,7 +12,6 @@ import CssStyles from "./Carousel.module.css";
 import RadioGroup from "../RadioBtn/RadioGroup";
 import RadioBtn from "../RadioBtn/RadioBtn";
 import useIntersectionObserver from "../../Hooks/useIntersectionObserver";
-// import { setInterval } from "timers";
 
 //types--------------------------------------------------------------
 export type CarouselDotsContainerPositionType =
@@ -313,43 +311,6 @@ function Carousel({
 		};
 	}
 
-	// setting up radio buttons (CarouselDots)
-	// function definition provided below changeSlide
-	// function definition
-	// let handleClickOnCarouselDots: (e: React.ChangeEvent) => void;
-
-	// const setRadioButtons = () => {
-	// 	const arr = Array.from(
-	// 		//specify Array length
-	// 		//with Array like object
-	// 		//{ length: number }
-	// 		{ length: (children as ReactElement[]).length },
-	// 		//map function as second
-	// 		//argument of Array.from()
-	// 		(_, index) => {
-	// 			if (index === 0) {
-	// 				return (
-	// 					<RadioBtn
-	// 						onChange={handleClickOnCarouselDots}
-	// 						dataOrder={index}
-	// 						key={index}
-	// 						checked={true}
-	// 					/>
-	// 				);
-	// 			} else {
-	// 				return (
-	// 					<RadioBtn
-	// 						onChange={handleClickOnCarouselDots}
-	// 						dataOrder={index}
-	// 						key={index}
-	// 					/>
-	// 				);
-	// 			}
-	// 		}
-	// 	);
-	// 	return arr;
-	// };
-
 	//state variables------------------------------------------------------
 
 	const [carouselContainerStyles] = useState<React.CSSProperties>(
@@ -363,10 +324,10 @@ function Carousel({
 		Animation | undefined
 	>();
 	const carouselAnimationOptions = useRef(settingAnimationOptions());
-	const [
-		transitionSlidesOnPointerMoveAnimation,
-		setTransitionSlidesOnPointerMoveAnimation,
-	] = useState<Animation | undefined>();
+	// const [
+	// 	transitionSlidesOnPointerMoveAnimation,
+	// 	setTransitionSlidesOnPointerMoveAnimation,
+	// ] = useState<Animation | undefined>();
 	const [isSlidesContainerVisible, CarouselContainerRef] =
 		useIntersectionObserver<HTMLElement>({ threshold: 0.7 });
 	const CarouselDotsRadioGroupRef = useRef<HTMLDivElement>(null);
@@ -377,10 +338,8 @@ function Carousel({
 	const [CarouselDotsLabelStyles] = useState<React.CSSProperties>(
 		setCarouselDotsLabelStyles
 	);
-	// const [RadioButtons] = useState<React.ReactNode[]>(setRadioButtons);
 	const [slideNo, setSlideNo] = useState<number>(0);
 	const gapBetweenSlidesInPixels = useRef<number>(0);
-	// const childrenWithStyleProp = useRef<React.ReactElement[] | null>(null);
 	const [autoSlideChangeIsPaused, setAutoSlideChangeIsPaused] = useState<
 		boolean | null
 	>(() => {
@@ -390,140 +349,9 @@ function Carousel({
 	const [mediaQuery, setMediaQuery] = useState<boolean>(
 		window.matchMedia("(min-width: 768px)").matches
 	);
-	// const childrenLength = useRef<number | null>(null);
-	// const [transitionAnimation,setTransitionAnimation] = useState();
 
 	//---------------------------------------------------------------------
 
-	//add styling to children
-	// function addStylePropsToChildren() {
-	// 	// const childrenArr = React.Children.toArray(
-	// 	// 	children
-	// 	// ) as React.ReactElement[];
-	// 	// const childrenLen = React.Children.count(children);
-	// 	// if (
-	// 	// 	// childrenArr[0].props["data-carousel-optimized"] &&
-	// 	// 	childrenLen === childrenLength.current
-	// 	// ) {
-	// 	// 	console.log("hi");
-	// 	// 	return children;
-	// 	// }
-	// 	// childrenLength.current = childrenLen;
-	// 	return React.Children.map(children, (child, index) => {
-	// 		//check if each child is a
-	// 		//valid JSX element
-	// 		if (React.isValidElement(child)) {
-	// 			//store existing classes if any so
-	// 			// that they can be included and not overwritten
-	// 			let existingClasses: string;
-	// 			child.props.className
-	// 				? (existingClasses = child.props.className)
-	// 				: (existingClasses = "");
-	// 			//if child is a picture tag
-	// 			//then map through its children and
-	// 			//add styles to img element child
-	// 			if (child.type === "picture") {
-	// 				const grandchildren = React.Children.map(
-	// 					child.props.children,
-	// 					(grandChild, index) => {
-	// 						//if child of picture element is
-	// 						//an img tag then add styles
-	// 						if (grandChild.type === "img") {
-	// 							//store existing classes
-	// 							let existingGrandChildClasses: string;
-	// 							grandChild.props.className
-	// 								? (existingGrandChildClasses =
-	// 										grandChild.props.className)
-	// 								: (existingGrandChildClasses = "");
-	// 							//if classes exist then include them
-	// 							if (existingGrandChildClasses) {
-	// 								return React.cloneElement(grandChild, {
-	// 									// "data-carousel-optimized": true,
-	// 									className: `${existingGrandChildClasses} ${CssStyles["slide-media-img"]}`,
-	// 									draggable: "false",
-	// 								});
-	// 								// else don't include them in the className prop
-	// 							} else {
-	// 								return React.cloneElement(grandChild, {
-	// 									// "data-carousel-optimized": true,
-	// 									className: CssStyles["slide-media-img"],
-	// 									draggable: "false",
-	// 								});
-	// 							}
-	// 						} else {
-	// 							return grandChild;
-	// 						}
-	// 					}
-	// 				);
-	// 				//return picture element with
-	// 				// new children
-	// 				return React.cloneElement(child, undefined, grandchildren);
-	// 				//if child is an img
-	// 				//element then add img specific styles
-	// 			} else if (child.type === "img") {
-	// 				//if classes exist then include them
-	// 				if (existingClasses) {
-	// 					return React.cloneElement(child, {
-	// 						// "data-carousel-optimized": true,
-	// 						className: `${existingClasses} ${CssStyles["slide-media-img"]}`,
-	// 						draggable: "false",
-	// 					} as ComponentProps<"image">);
-	// 					//else don't include them
-	// 				} else {
-	// 					return React.cloneElement(child, {
-	// 						// "data-carousel-optimized": true,
-	// 						className: CssStyles["slide-media-img"],
-	// 						draggable: "false",
-	// 					} as ComponentProps<"image">);
-	// 				}
-	// 				//if child is a video
-	// 				//element then add video specific styles
-	// 			} else if (
-	// 				child.type === "video" ||
-	// 				(typeof child.type === "function" &&
-	// 					child.type.name === "Video")
-	// 			) {
-	// 				//if classes exist then include them
-	// 				if (existingClasses) {
-	// 					return React.cloneElement(child, {
-	// 						// "data-carousel-optimized": true,
-	// 						className: `${existingClasses} ${CssStyles["slide-media-video"]}`,
-	// 						draggable: "false",
-	// 					} as ComponentProps<"video">);
-	// 					//else don't include classes
-	// 				} else {
-	// 					return React.cloneElement(child, {
-	// 						// "data-carousel-optimized": true,
-	// 						className: CssStyles["slide-media-video"],
-	// 						draggable: "false",
-	// 					} as ComponentProps<"video">);
-	// 				}
-	// 			} else {
-	// 				//else add generic slide styles
-	// 				// return child;
-	// 				//if classes exist then include them
-	// 				if (existingClasses) {
-	// 					return React.cloneElement(child, {
-	// 						// "data-carousel-optimized": true,
-	// 						className: `${existingClasses} ${CssStyles.slide}`,
-	// 						draggable: "false",
-	// 					} as React.HTMLAttributes<HTMLElement>);
-	// 					//else don't include
-	// 				} else {
-	// 					return React.cloneElement(child, {
-	// 						// "data-carousel-optimized": true,
-	// 						className: CssStyles.slide,
-	// 						draggable: "false",
-	// 					} as React.HTMLAttributes<HTMLElement>);
-	// 				}
-	// 			}
-	// 		} else {
-	// 			throw new Error(
-	// 				`Child at index ${index} of children is not a JSX element. Only JSX elements can be passed as children.`
-	// 			);
-	// 		}
-	// 	});
-	// }
 	const childrenWithStyleProp = useMemo(
 		function addStylePropsToChildren() {
 			return React.Children.map(children, (child, index) => {
@@ -553,21 +381,14 @@ function Carousel({
 												grandChild.props.className)
 										: (existingGrandChildClasses = "");
 									//if classes exist then include them
-									if (existingGrandChildClasses) {
-										return React.cloneElement(grandChild, {
-											// "data-carousel-optimized": true,
-											className: `${existingGrandChildClasses} ${CssStyles["slide-media-img"]}`,
-											draggable: "false",
-										});
-										// else don't include them in the className prop
-									} else {
-										return React.cloneElement(grandChild, {
-											// "data-carousel-optimized": true,
-											className:
-												CssStyles["slide-media-img"],
-											draggable: "false",
-										});
-									}
+									// else don't include them in the className prop
+									return React.cloneElement(grandChild, {
+										// "data-carousel-optimized": true,
+										className: existingGrandChildClasses
+											? `${existingGrandChildClasses} ${CssStyles["slide-media-img"]}`
+											: CssStyles["slide-media-img"],
+										draggable: "false",
+									});
 								} else {
 									return grandChild;
 								}
@@ -584,20 +405,14 @@ function Carousel({
 						//element then add img specific styles
 					} else if (child.type === "img") {
 						//if classes exist then include them
-						if (existingClasses) {
-							return React.cloneElement(child, {
-								// "data-carousel-optimized": true,
-								className: `${existingClasses} ${CssStyles["slide-media-img"]}`,
-								draggable: "false",
-							} as ComponentProps<"image">);
-							//else don't include them
-						} else {
-							return React.cloneElement(child, {
-								// "data-carousel-optimized": true,
-								className: CssStyles["slide-media-img"],
-								draggable: "false",
-							} as ComponentProps<"image">);
-						}
+						//else don't include them
+						return React.cloneElement(child, {
+							// "data-carousel-optimized": true,
+							className: existingClasses
+								? `${existingClasses} ${CssStyles["slide-media-img"]}`
+								: CssStyles["slide-media-img"],
+							draggable: "false",
+						} as ComponentProps<"image">);
 						//if child is a video
 						//element then add video specific styles
 					} else if (
@@ -606,38 +421,25 @@ function Carousel({
 							child.type.name === "Video")
 					) {
 						//if classes exist then include them
-						if (existingClasses) {
-							return React.cloneElement(child, {
-								// "data-carousel-optimized": true,
-								className: `${existingClasses} ${CssStyles["slide-media-video"]}`,
-								draggable: "false",
-							} as ComponentProps<"video">);
-							//else don't include classes
-						} else {
-							return React.cloneElement(child, {
-								// "data-carousel-optimized": true,
-								className: CssStyles["slide-media-video"],
-								draggable: "false",
-							} as ComponentProps<"video">);
-						}
+						//else don't include classes
+						return React.cloneElement(child, {
+							// "data-carousel-optimized": true,
+							className: existingClasses
+								? `${existingClasses} ${CssStyles["slide-media-video"]}`
+								: CssStyles["slide-media-video"],
+							draggable: "false",
+						} as ComponentProps<"video">);
 					} else {
 						//else add generic slide styles
-						// return child;
 						//if classes exist then include them
-						if (existingClasses) {
-							return React.cloneElement(child, {
-								// "data-carousel-optimized": true,
-								className: `${existingClasses} ${CssStyles.slide}`,
-								draggable: "false",
-							} as React.HTMLAttributes<HTMLElement>);
-							//else don't include
-						} else {
-							return React.cloneElement(child, {
-								// "data-carousel-optimized": true,
-								className: CssStyles.slide,
-								draggable: "false",
-							} as React.HTMLAttributes<HTMLElement>);
-						}
+						//else don't include classes
+						return React.cloneElement(child, {
+							// "data-carousel-optimized": true,
+							className: existingClasses
+								? `${existingClasses} ${CssStyles.slide}`
+								: CssStyles.slide,
+							draggable: "false",
+						} as React.HTMLAttributes<HTMLElement>);
 					}
 				} else {
 					throw new Error(
@@ -702,42 +504,11 @@ function Carousel({
 						  )
 						: null;
 			}
-			// const carouselDotsContainerAnimation =
-			// 	CarouselDotsContainerRef.current
-			// 		? CarouselDotsContainerRef.current.animate(
-			// 				{
-			// 					opacity: [0, 1, 1, 0],
-			// 					offset: [0, 0.3, 0.6, 1],
-			// 				},
-			// 				{
-			// 					duration:
-			// 						carouselAnimationOptions.current.duration,
-			// 					fill: "both",
-			// 				}
-			// 		  )
-			// 		: null;
 
 			if (carouselDotsContainerAnimation)
 				carouselDotsContainerAnimation.pause();
 
 			if (isVertical) {
-				// (
-				// 	slidesContainerRef.current as HTMLDivElement
-				// ).style.transform = `translate(0,-${
-				// 	// (100 / childrenWithStyleProp.length) * slideNo
-				// 	100 * slideNo
-				// }%)`;
-				// requestAnimationFrame(() => {
-				// 	(
-				// 		slidesContainerRef.current as HTMLDivElement
-				// 	).style.transform = `translate(0,-${transformBy}%)`;
-				// });
-				// requestAnimationFrame(() => {
-				// const slidesContainer =
-				// 	slidesContainerRef.current as HTMLDivElement;
-				// const matrix = new DOMMatrix(
-				// 	getComputedStyle(slidesContainer).transform
-				// );
 				transitionSlidesOnChangingSlideNoAnimation.current =
 					slidesContainer.animate(
 						{
@@ -757,33 +528,12 @@ function Carousel({
 						transitionSlidesOnChangingSlideNoAnimation.current?.cancel();
 					};
 
-				if (
-					!carouselDotsContainerAnimation
-					// !CarouselDots.AutoHideAfterTransition
-				) {
+				if (!carouselDotsContainerAnimation) {
 					return;
 				}
 
 				carouselDotsContainerAnimation.play();
-				// });
 			} else {
-				// (
-				// 	slidesContainerRef.current as HTMLDivElement
-				// ).style.transform = `translate(-${
-				// 	// (100 / childrenWithStyleProp.length) * slideNo
-				// 	100 * slideNo
-				// }%,0)`;
-				// requestAnimationFrame(() => {
-				// (
-				// 	slidesContainerRef.current as HTMLDivElement
-				// 	).style.transform = `translate(-${transformBy}%,0)`;
-				// });
-				// requestAnimationFrame(() => {
-				// const slidesContainer =
-				// 	slidesContainerRef.current as HTMLDivElement;
-				// const matrix = new DOMMatrix(
-				// 	getComputedStyle(slidesContainer).transform
-				// );
 				transitionSlidesOnChangingSlideNoAnimation.current =
 					slidesContainer.animate(
 						{
@@ -801,15 +551,11 @@ function Carousel({
 						transitionSlidesOnChangingSlideNoAnimation.current?.cancel();
 					};
 
-				if (
-					!carouselDotsContainerAnimation
-					// !CarouselDots.AutoHideAfterTransition
-				) {
+				if (!carouselDotsContainerAnimation) {
 					return;
 				}
 
 				carouselDotsContainerAnimation.play();
-				// });
 			}
 		},
 		[CarouselDots.AutoHideAfterTransition, isVertical]
@@ -860,8 +606,6 @@ function Carousel({
 				});
 			}
 		},
-		// []
-		// );
 		[
 			AutoSlideChange.isTrue,
 			NoOfSlidesInView,
@@ -984,7 +728,6 @@ function Carousel({
 		const slidesContainer = slidesContainerRef.current;
 		let startPosX: number;
 		let startPosY: number;
-		// let shouldWait = false;
 		let firstInstance = true;
 		let prevTranslatedAmount: DOMMatrix;
 		let prevY: number;
@@ -995,17 +738,9 @@ function Carousel({
 		} as KeyframeAnimationOptions;
 
 		let animation: Animation;
-		// let timer: ReturnType<typeof setTimeout>;
 		let moveDirection: "x" | "y";
 
 		let shouldExecute = false;
-
-		//flag to prevent pointer up event from being invoked if
-		//button pressed wasn't left mouse or touch contact or pen contact
-		//(evt.buttons property on pointerup event = 0)
-		// let leftClick = true;
-		// let diffX:number;
-		// 	let diffY:number;
 
 		const HandlePointerDown = (e: PointerEvent) => {
 			//check if button currently being clicked is
@@ -1021,13 +756,8 @@ function Carousel({
 			prevX = prevTranslatedAmount.e;
 			prevY = prevTranslatedAmount.f;
 
-			// isVertical ? (startPosX = e.clientY) : (startPosX = e.clientX);
 			startPosX = e.clientX;
 			startPosY = e.clientY;
-
-			// requestAnimationFrame(() => {
-			// slidesContainer.style.cursor = "grab";
-			// });
 		};
 
 		function HandlePointerMove(e: PointerEvent) {
@@ -1042,85 +772,6 @@ function Carousel({
 			//capture target to allow for the event to fire even
 			//after the cursor has left the elements bounds
 			slidesContainer.setPointerCapture(e.pointerId);
-			// requestAnimationFrame(() => {
-			// 	// console.log("move");
-			// 	if (animation) {
-			// 		animation.finish();
-			// 		animation.cancel();
-			// 	}
-
-			// 	let diff: number;
-
-			// 	isVertical
-			// 		? (diff = startPosX - e.clientY)
-			// 		: (diff = startPosX - e.clientX);
-
-			// 	let translateAmount: number;
-			// 	// console.log(diff);
-			// 	//if gesture is towards the left (diff > 0) then
-			// 	//absolute value of diff must be subtracted from previously translated
-			// 	//amount (which is itself a negative value) so that the slidesContainer
-			// 	//moves towards the left (translate value should be negative)
-			// 	if (diff > 0) {
-			// 		isVertical
-			// 			? (translateAmount =
-			// 					prevTranslatedAmount.f - Math.abs(diff))
-			// 			: (translateAmount =
-			// 					prevTranslatedAmount.e - Math.abs(diff));
-			// 	} else {
-			// 		//if the gesture is towards the right (diff < 0) then
-			// 		//absolute value of diff must be added to previously translated
-			// 		//amount (negative value) so that the slidesContainer moves
-			// 		//towards the right. Translate value will be less negative, final value
-			// 		//will still be negative (unless slideNo === 0 in which case previously translated
-			// 		//value = 0) since the previously translated value was negative.
-			// 		//Eg - prevTranslatedAmount = -300px, diff = -50px
-			// 		//	translateAmount = -300 + 50 = -250 --> container moves towards the right
-			// 		isVertical
-			// 			? (translateAmount =
-			// 					prevTranslatedAmount.f + Math.abs(diff))
-			// 			: (translateAmount =
-			// 					prevTranslatedAmount.e + Math.abs(diff));
-			// 	}
-
-			// 	// queueMicrotask(
-			// 	// 	() => (slidesContainer.style.cursor = "grabbing")
-			// 	// );
-
-			// 	// isVertical
-			// 	// 	? (slidesContainer.style.transform = `translateY(${translateAmount}px)`)
-			// 	// 	: (slidesContainer.style.transform = `translateX(${translateAmount}px)`);
-			// 	if (isVertical) {
-			// 		animation = slidesContainer.animate(
-			// 			{
-			// 				transform: [
-			// 					`translate(${prevX}px,${prevY}px)`,
-			// 					`translate(0px,${translateAmount}px)`,
-			// 				],
-			// 			},
-			// 			timingOptions
-			// 		);
-			// 	} else {
-			// 		animation = slidesContainer.animate(
-			// 			{
-			// 				transform: [
-			// 					`translate(${prevX}px,${prevY}px)`,
-			// 					`translate(${translateAmount}px,0px)`,
-			// 				],
-			// 			},
-			// 			timingOptions
-			// 		);
-			// 	}
-
-			// 	// animation.onfinish = function onAnimationFinish() {
-			// 	// 	animation.commitStyles();
-			// 	// 	animation.cancel();
-			// 	// };
-
-			// 	isVertical
-			// 		? (prevY = translateAmount)
-			// 		: (prevX = translateAmount);
-			// });
 
 			if (shouldExecute) {
 				//delete the animation instance on next invocation so
@@ -1148,6 +799,8 @@ function Carousel({
 						//slides should move towards the right ie. value should be
 						//positive or less negative (prevTranslatedValue is always negative unless slideNo === 0)
 						//if carousel is horizontal --> don't translate vertically
+						//Eg - prevTranslatedAmount = -300px, diff = -50px
+						//translateAmount = -300 + 50 = -250 --> container moves towards the right
 						!isVertical
 							? (translateAmount =
 									prevTranslatedAmount.e + Math.abs(diff))
@@ -1286,207 +939,6 @@ function Carousel({
 		slidesContainerRef,
 	]);
 
-	//touch/pointer
-	// useEffect(() => {
-	// 	if (!slidesContainerRef.current) return;
-
-	// 	const slidesContainer = slidesContainerRef.current;
-	// 	let startPosX: number;
-	// 	// let shouldWait = false;
-	// 	// let firstInstance = true;
-	// 	let prevTranslatedAmount: DOMMatrix;
-	// 	let prevY: number;
-	// 	let prevX: number;
-	// 	let timingOptions = {
-	// 		duration: 300,
-	// 		fill: "forwards",
-	// 	} as KeyframeAnimationOptions;
-
-	// 	let animation: Animation;
-	// 	// let timer: ReturnType<typeof setTimeout>;
-
-	// 	//flag to prevent pointer up event from being invoked if
-	// 	//button pressed wasn't left mouse or touch contact or pen contact
-	// 	//(evt.buttons property on pointerup event = 0)
-	// 	// let leftClick = true;
-
-	// 	const HandlePointerDown = (e: PointerEvent) => {
-	// 		//check if button currently being clicked is
-	// 		//left mouse or touch contact or pen contact
-	// 		if (e.buttons !== 1) {
-	// 			return;
-	// 		}
-
-	// 		prevTranslatedAmount = new DOMMatrix(
-	// 			getComputedStyle(slidesContainer).transform
-	// 		);
-
-	// 		prevX = prevTranslatedAmount.e;
-	// 		prevY = prevTranslatedAmount.f;
-
-	// 		isVertical ? (startPosX = e.clientY) : (startPosX = e.clientX);
-
-	// 		// requestAnimationFrame(() => {
-	// 		// slidesContainer.style.cursor = "grab";
-	// 		// });
-	// 	};
-
-	// 	const HandlePointerMove = (e: PointerEvent) => {
-	// 		//check if button currently being clicked is
-	// 		//left mouse or touch contact or pen contact
-	// 		// IMP TO CHECK!!!!!!!!!!!!!!!!!!!
-	// 		if (e.buttons !== 1) {
-	// 			// slidesContainer.style.cursor = "initial";
-	// 			return;
-	// 		}
-
-	// 		slidesContainer.setPointerCapture(e.pointerId);
-	// 		requestAnimationFrame(() => {
-	// 			// console.log("move");
-	// 			if (animation) {
-	// 				animation.finish();
-	// 				// requestAnimationFrame(() => {
-	// 				// 	animation.commitStyles();
-	// 				// });
-	// 				animation.cancel();
-	// 			}
-
-	// 			let diff: number;
-
-	// 			isVertical
-	// 				? (diff = startPosX - e.clientY)
-	// 				: (diff = startPosX - e.clientX);
-
-	// 			let translateAmount: number;
-	// 			// console.log(diff);
-	// 			//if gesture is towards the left (diff > 0) then
-	// 			//absolute value of diff must be subtracted from previously translated
-	// 			//amount (which is itself a negative value) so that the slidesContainer
-	// 			//moves towards the left (translate value should be negative)
-	// 			if (diff > 0) {
-	// 				isVertical
-	// 					? (translateAmount =
-	// 							prevTranslatedAmount.f - Math.abs(diff))
-	// 					: (translateAmount =
-	// 							prevTranslatedAmount.e - Math.abs(diff));
-	// 			} else {
-	// 				//if the gesture is towards the right (diff < 0) then
-	// 				//absolute value of diff must be added to previously translated
-	// 				//amount (negative value) so that the slidesContainer moves
-	// 				//towards the right. Translate value will be less negative, final value
-	// 				//will still be negative (unless slideNo === 0 in which case previously translated
-	// 				//value = 0) since the previously translated value was negative.
-	// 				//Eg - prevTranslatedAmount = -300px, diff = -50px
-	// 				//	translateAmount = -300 + 50 = -250 --> container moves towards the right
-	// 				isVertical
-	// 					? (translateAmount =
-	// 							prevTranslatedAmount.f + Math.abs(diff))
-	// 					: (translateAmount =
-	// 							prevTranslatedAmount.e + Math.abs(diff));
-	// 			}
-
-	// 			// queueMicrotask(
-	// 			// 	() => (slidesContainer.style.cursor = "grabbing")
-	// 			// );
-
-	// 			// isVertical
-	// 			// 	? (slidesContainer.style.transform = `translateY(${translateAmount}px)`)
-	// 			// 	: (slidesContainer.style.transform = `translateX(${translateAmount}px)`);
-	// 			if (isVertical) {
-	// 				animation = slidesContainer.animate(
-	// 					{
-	// 						transform: [
-	// 							`translate(${prevX}px,${prevY}px)`,
-	// 							`translate(0px,${translateAmount}px)`,
-	// 						],
-	// 					},
-	// 					timingOptions
-	// 				);
-	// 			} else {
-	// 				animation = slidesContainer.animate(
-	// 					{
-	// 						transform: [
-	// 							`translate(${prevX}px,${prevY}px)`,
-	// 							`translate(${translateAmount}px,0px)`,
-	// 						],
-	// 					},
-	// 					timingOptions
-	// 				);
-	// 			}
-
-	// 			// animation.onfinish = function onAnimationFinish() {
-	// 			// 	animation.commitStyles();
-	// 			// 	animation.cancel();
-	// 			// };
-
-	// 			isVertical
-	// 				? (prevY = translateAmount)
-	// 				: (prevX = translateAmount);
-	// 		});
-	// 	};
-
-	// 	const HandlePointerUp = (e: PointerEvent) => {
-	// 		//if button that triggered the event wasn't left mouse or
-	// 		//touch contact or pen contact then return
-	// 		//using button property in pointerup instead of button(s)
-	// 		if (e.button !== 0) return;
-
-	// 		let diff: number;
-	// 		isVertical
-	// 			? (diff = startPosX - e.clientY)
-	// 			: (diff = startPosX - e.clientX);
-	// 		const threshold = 100;
-
-	// 		// console.log("removed");
-	// 		if (diff === 0) return;
-	// 		// if ((diff > 0 || diff < 0) && Math.abs(diff) < threshold) {
-	// 		if (Math.abs(diff) < threshold) {
-	// 			// changeSlide(slideNo);
-	// 			setSlideNo((prev) => {
-	// 				changeSlide(prev);
-	// 				return prev;
-	// 			});
-	// 		} else if (diff > 0 && Math.abs(diff) > threshold) {
-	// 			IncrementOrDecrementSlideNo("increment");
-	// 		} else if (diff < 0 && Math.abs(diff) > threshold) {
-	// 			IncrementOrDecrementSlideNo("decrement");
-	// 		}
-
-	// 		//set cursor to default style
-	// 		// requestAnimationFrame(() => {
-	// 		// setTimeout(() => (slidesContainer.style.cursor = "initial"), 0);
-	// 		// });
-	// 	};
-
-	// 	//adding event listeners
-	// 	slidesContainer.addEventListener("pointerdown", HandlePointerDown);
-	// 	slidesContainer.addEventListener(
-	// 		"pointermove",
-	// 		HandlePointerMove,
-	// 		true
-	// 	);
-	// 	slidesContainer.addEventListener("pointerup", HandlePointerUp);
-
-	// 	return () => {
-	// 		slidesContainer.removeEventListener(
-	// 			"pointerdown",
-	// 			HandlePointerDown
-	// 		);
-	// 		slidesContainer.removeEventListener(
-	// 			"pointermove",
-	// 			HandlePointerMove,
-	// 			true
-	// 		);
-	// 		slidesContainer.removeEventListener("pointerup", HandlePointerUp);
-	// 		// slidesContainer.style.cursor = "initial";
-	// 	};
-	// }, [
-	// 	IncrementOrDecrementSlideNo,
-	// 	changeSlide,
-	// 	isVertical,
-	// 	slidesContainerRef,
-	// ]);
-
 	//configuring wheel event
 	useEffect(() => {
 		if (!AnimateOnWheelEvent) return;
@@ -1511,14 +963,14 @@ function Carousel({
 				// settingAutoSlideChangePause(true);
 			}
 
+			//wait for a couple of instances before executing
+			//the main logic since wheelEvent.delta values for
+			//first couple of instances are not reliable
 			if (secondInstance) {
-				// console.log(e.deltaX);
 				execute(isVertical ? e.deltaY : e.deltaX);
 				secondInstance = false;
 			}
 			if (firstInstance) {
-				// console.log(e.deltaX);
-				// execute(isVertical ? e.deltaY : e.deltaX);
 				firstInstance = false;
 				secondInstance = true;
 			}
@@ -1531,28 +983,7 @@ function Carousel({
 				secondInstance = false;
 			}, 200);
 		};
-		// const throttleWheelEvent = (
-		// 	callback: (delta: number) => void,
-		// 	delay = 200
-		// ) => {
-		// 	let firstInstance = true;
-		// 	let timer: ReturnType<typeof setTimeout>;
-		// 	return (e: WheelEvent) => {
-		// 		e.stopPropagation();
-		// 		if (firstInstance) {
-		// 			console.log("first");
-		// 			callback(isVertical ? e.deltaY : e.deltaX);
-		// 			firstInstance = false;
-		// 		}
-		// 		if (timer) {
-		// 			clearTimeout(timer);
-		// 		}
-		// 		//last Instance
-		// 		timer = setTimeout(() => {
-		// 			firstInstance = true;
-		// 		}, delay);
-		// 	};
-		// };
+
 		slidesContainer.addEventListener("wheel", handleWheelEvent);
 		return () => {
 			slidesContainer.removeEventListener("wheel", handleWheelEvent);
@@ -1568,7 +999,6 @@ function Carousel({
 	useEffect(() => {
 		if (!AutoSlideChange.isTrue || !isInfiniteLoop) return;
 
-		// console.log("isPaused: " + autoSlideChangeIsPaused);
 		let timer: ReturnType<typeof setTimeout>;
 		//auto changing the slide in setInterval
 
@@ -1604,9 +1034,6 @@ function Carousel({
 			if (document.visibilityState === "hidden") {
 				settingAutoSlideChangePause(true);
 			}
-			// else {
-			// 	settingAutoSlideChangePause(true);
-			// }
 		};
 
 		document.addEventListener(
@@ -1632,7 +1059,6 @@ function Carousel({
 	//change slide if setActiveSlide is passed from parent
 	useEffect(() => {
 		if (setActiveSlide === undefined || setActiveSlide === null) {
-			// console.log("in return statement: " + setActiveSlide);
 			return;
 		}
 
@@ -1779,7 +1205,6 @@ function Carousel({
 		</section>
 	);
 }
-// {/* {RadioButtons} */}
 
 function memoCompareFunction(
 	prevProps: CarouselPropsType,
@@ -1798,22 +1223,3 @@ function memoCompareFunction(
 }
 
 export default memo(Carousel, memoCompareFunction);
-
-// Array.from(
-// 	//specify Array length
-// 	//with Array like object
-// 	//{ length: number }
-// 	{ length: childrenWithStyleProp.length },
-// 	//map function as second
-// 	//argument of Array.from()
-// 	(_, index) => {
-// 		return (
-// 			<RadioBtn
-// 				onChange={handleClickOnCarouselDots}
-// 				// dataOrder={index}
-// 				key={index}
-// 				checked={slideNo === index}
-// 			/>
-// 		);
-// 	}
-// )

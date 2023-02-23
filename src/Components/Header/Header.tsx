@@ -3,15 +3,21 @@ import "./Header.css";
 import jsonList from "../../jsonData/sideNavList.json";
 import { convertSuperscript } from "./utils";
 import { jsonListType } from "./types";
-import { Link, Outlet, useOutletContext } from "react-router-dom";
+// import { Link, Outlet, useOutletContext } from "react-router-dom";
 
 const navList = jsonList as jsonListType;
 
-const Header = () => {
+type category = "man" | "woman" | "kids";
+interface HeaderPropsType {
+	setCategory: React.Dispatch<React.SetStateAction<category | undefined>>;
+	headerLogoColor: "black" | "white";
+}
+
+const Header = ({ setCategory, headerLogoColor }: HeaderPropsType) => {
 	const sideMenuRef = useRef<HTMLElement>(null!);
 	const tabPanelContainerRef = useRef<HTMLDivElement>(null!);
-	const [category, setCategory] = useState<string | undefined>("");
-	const [headerLogoColor, setHeaderLogoColor] = useState("black");
+	// const [category, setCategory] = useState<string | undefined>("");
+	// const [headerLogoColor, setHeaderLogoColor] = useState("black");
 
 	const openMenu: React.MouseEventHandler = (e) => {
 		sideMenuRef.current.classList.add("side-menu-wrapper--open");
@@ -21,18 +27,22 @@ const Header = () => {
 		sideMenuRef.current.classList.remove("side-menu-wrapper--open");
 	};
 
-	const contextProviderValue = useMemo(
-		() => ({ category, setHeaderLogoColor }),
-		[category]
-	);
+	// const contextProviderValue = useMemo(
+	// 	() => ({ category, setHeaderLogoColor }),
+	// 	[category]
+	// );
 
 	const showActiveTabPanel: React.MouseEventHandler = (e) => {
 		if (e.currentTarget.classList.contains("active-tab")) {
-			setCategory((prev) => {
-				if (prev === "") {
-					setTimeout(() => setCategory("woman"), 0);
-				}
-				setTimeout(() => setCategory(prev), 0);
+			// setCategory((prev) => {
+			// 	if (prev === "") {
+			// 		setTimeout(() => setCategory("woman"), 0);
+			// 	}
+			// 	setTimeout(() => setCategory(prev), 0);
+			// 	return undefined;
+			// });
+			setCategory((prevVal) => {
+				queueMicrotask(() => setCategory(prevVal));
 				return undefined;
 			});
 			return;
@@ -45,14 +55,14 @@ const Header = () => {
 		tabsArray.forEach((tab) => tab.classList.remove("active-tab"));
 		ele.classList.add("active-tab");
 
-		const id = ele.id;
+		const id = ele.id as category;
 		tabPanelContainerRef.current.dataset.activeTabpanel = id;
 		setCategory(id);
 	};
 
-	useEffect(() => {
-		console.log(category);
-	}, [category]);
+	// useEffect(() => {
+	// 	console.log(category);
+	// }, [category]);
 
 	//handle click outside
 	//side menu when open
@@ -182,12 +192,12 @@ const Header = () => {
 						>
 							SEARCH
 						</button>
-						<Link to="#" className="site-header__log-in">
+						<a href="#" className="site-header__log-in">
 							LOG IN
-						</Link>
-						<Link to="#" className="site-header__help">
+						</a>
+						<a href="#" className="site-header__help">
 							HELP
-						</Link>
+						</a>
 					</section>
 				</div>
 			</header>
@@ -285,18 +295,18 @@ const Header = () => {
 					</footer>
 				</div>
 			</section>
-			<Outlet context={contextProviderValue} />
+			{/* <Outlet context={contextProviderValue} /> */}
 		</>
 	);
 };
 
 export default Header;
 
-interface CategoryContext {
-	category: string | undefined;
-	setHeaderLogoColor: React.Dispatch<React.SetStateAction<string>>;
-}
+// interface CategoryContext {
+// 	category: string | undefined;
+// 	setHeaderLogoColor: React.Dispatch<React.SetStateAction<string>>;
+// }
 
-export const useCategoryContext = () => {
-	return useOutletContext<CategoryContext>();
-};
+// export const useCategoryContext = () => {
+// 	return useOutletContext<CategoryContext>();
+// };
