@@ -1,11 +1,23 @@
 import "./index.css";
-import React from "react";
+import Header from "./Components/Header/Header";
+import Home from "./Components/Home/Home";
+import { useState } from "react";
 
 function App() {
+	const [category, setCategory] = useState<
+		"man" | "woman" | "kids" | undefined
+	>("woman");
+	const [headerLogoColor, setHeaderLogoColor] = useState<"black" | "white">(
+		"black"
+	);
+
 	return (
 		<>
-			<h1>hello</h1>
-			<img src={require("../assets/dog.jpg")} alt="cute dog" />
+			<Header
+				setCategory={setCategory}
+				headerLogoColor={headerLogoColor}
+			/>
+			<Home category={category} setHeaderLogoColor={setHeaderLogoColor} />
 		</>
 	);
 }
