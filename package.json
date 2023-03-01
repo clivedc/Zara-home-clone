@@ -5,7 +5,8 @@
 	"main": "index.js",
 	"scripts": {
 		"lint": "eslint ./src",
-		"start-n": "webpack -c .configs/webpack.config.dev.js"
+		"start-n": "webpack -c .configs/webpack.config.dev.js",
+		"start": "webpack serve -c .configs/webpack.config.dev.js"
 	},
 	"author": "Clive D' Costa",
 	"license": "ISC",

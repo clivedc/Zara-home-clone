@@ -9,7 +9,7 @@ module.exports = {
 	entry: "./src/index.tsx",
 	output: {
 		// filename: "bundle.js",
-		path: path.resolve(__dirname, "dist"),
+		path: path.join(__dirname, "..", "dist"),
 		clean: true,
 	},
 	watchOptions: {
@@ -32,7 +32,7 @@ module.exports = {
 						},
 					},
 				],
-				// include: /\.module\.css$/i,
+				include: /\.module\.css$/i,
 			},
 			{
 				test: /\.jpe?g$/i,
@@ -41,11 +41,11 @@ module.exports = {
 					filename: "assets/images/[name][ext]",
 				},
 			},
-			// {
-			// 	test: /\.css$/i,
-			// 	use: [miniCssExtractPlugin.loader,"css-loader"],
-			// 	exclude: /\.module\.css$/i,
-			// },
+			{
+				test: /\.css$/i,
+				use: [miniCssExtractPlugin.loader, "css-loader"],
+				exclude: /\.module\.css$/i,
+			},
 		],
 	},
 	plugins: [

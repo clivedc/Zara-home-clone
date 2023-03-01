@@ -22,7 +22,7 @@ const devConfig = {
 				options: {
 					loader: "tsx",
 					target: "es6",
-					tsconfig: ".configs/tsconfig.json",
+					// tsconfig: ".configs/tsconfig.json",
 				},
 			},
 		],

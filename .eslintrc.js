@@ -18,7 +18,7 @@ module.exports = {
 		ecmaVersion: "latest",
 		sourceType: "module",
 	},
-	plugins: ["react", "@typescript-eslint"],
+	plugins: ["react", "@typescript-eslint", "react-hooks"],
 	settings: {
 		react: {
 			version: "detect",
@@ -26,5 +26,7 @@ module.exports = {
 	},
 	rules: {
 		"@typescript-eslint/no-var-requires": "off",
+		"prefer-const": "off",
+		"no-mixed-spaces-and-tabs": "off",
 	},
 };

@@ -1,4 +1,3 @@
-import "./index.css";
 import Header from "./Components/Header/Header";
 import Home from "./Components/Home/Home";
 import { useState } from "react";

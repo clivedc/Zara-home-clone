@@ -94,6 +94,7 @@ const RadioGroup = forwardRef<HTMLDivElement, RadioGroupPropsType>(
 				return childrenArr;
 			}
 			childrenLength.current = childrenArr.length;
+			// console.log(childrenArr);
 			// return React.Children.map(children, (child, index) => {
 			return childrenArr.map((child, index) => {
 				//check if child is a valid JSX element
@@ -103,17 +104,17 @@ const RadioGroup = forwardRef<HTMLDivElement, RadioGroupPropsType>(
 					);
 				}
 
-				if (
-					child.type !== "input" &&
-					!(
-						typeof child.type === "object" &&
-						(child.type as any).type.render.name === "RadioBtn"
-					)
-				) {
-					throw new Error(
-						`Children must be of type radio or the RadioBtn component.\nChild at index '${index}' of children does not match this condition.`
-					);
-				}
+				// if (
+				// 	child.type !== "input" &&
+				// 	!(
+				// 		typeof child.type === "object" &&
+				// 		(child.type as any).type.render.name === "RadioBtn"
+				// 	)
+				// ) {
+				// 	throw new Error(
+				// 		`Children must be of type radio or the RadioBtn component.\nChild at index '${index}' of children does not match this condition.`
+				// 	);
+				// }
 
 				if (
 					(child as React.ReactElement).props.checked !== undefined &&

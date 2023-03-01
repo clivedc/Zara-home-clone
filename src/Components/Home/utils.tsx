@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+// import { a } from "react-router-dom";
 
 export const setVerticalCarouselLastSlide = () => {
 	return (
@@ -7,8 +7,8 @@ export const setVerticalCarouselLastSlide = () => {
 				JOIN OUR NEWSLETTER
 			</p>
 			<section className="vert-carousel-container__last-slide__social-links-container">
-				<NavLink
-					to="#"
+				<a
+					href="#"
 					// className={(isActive) =>
 					// 	!isActive
 					// 		? "social-links-container__social-link"
@@ -17,9 +17,9 @@ export const setVerticalCarouselLastSlide = () => {
 					className="social-links-container__social-link"
 				>
 					Instagram
-				</NavLink>
-				<NavLink
-					to="#"
+				</a>
+				<a
+					href="#"
 					// className={(isActive) =>
 					// 	!isActive
 					// 		? "social-links-container__social-link"
@@ -28,9 +28,9 @@ export const setVerticalCarouselLastSlide = () => {
 					className="social-links-container__social-link"
 				>
 					Facebook
-				</NavLink>
-				<NavLink
-					to="#"
+				</a>
+				<a
+					href="#"
 					// className={(isActive) =>
 					// 	!isActive
 					// 		? "social-links-container__social-link"
@@ -39,9 +39,9 @@ export const setVerticalCarouselLastSlide = () => {
 					className="social-links-container__social-link"
 				>
 					Twitter
-				</NavLink>
-				<NavLink
-					to="#"
+				</a>
+				<a
+					href="#"
 					// className={(isActive) =>
 					// 	!isActive
 					// 		? "social-links-container__social-link"
@@ -50,9 +50,9 @@ export const setVerticalCarouselLastSlide = () => {
 					className="social-links-container__social-link"
 				>
 					Pinterest
-				</NavLink>
-				<NavLink
-					to="#"
+				</a>
+				<a
+					href="#"
 					// className={(isActive) =>
 					// 	!isActive
 					// 		? "social-links-container__social-link"
@@ -61,9 +61,9 @@ export const setVerticalCarouselLastSlide = () => {
 					className="social-links-container__social-link"
 				>
 					Youtube
-				</NavLink>
-				<NavLink
-					to="#"
+				</a>
+				<a
+					href="#"
 					// className={(isActive) =>
 					// 	!isActive
 					// 		? "social-links-container__social-link"
@@ -72,13 +72,13 @@ export const setVerticalCarouselLastSlide = () => {
 					className="social-links-container__social-link"
 				>
 					Spotify
-				</NavLink>
+				</a>
 			</section>
 			<section className="vert-carousel-container__last-slide__additional-info">
 				<p>Lorem ipsum dolor sit amet.</p>
 				<p>Loremipsd ips dolores sit ametsadbf sum.</p>
 				<p>
-					Lorempo ip su idimdolor sitque ametop consectetur
+					Lorempo ip su idimdolor sitque amehrefp consectetur
 					adipisicing elit.
 				</p>
 			</section>
@@ -91,7 +91,7 @@ export const setVerticalCarouselDotsWithLabels = () => {
 		Woman: ["NEW", "BASICS", "SHOES", "SHIRTS", ""],
 		Man: ["NEW", "ZARA ATHLETICZ", ""],
 		Kids: [
-			"BACK TO SCHOOL",
+			"BACK href SCHOOL",
 			"GIRL",
 			"BABY GIRL",
 			"BABY BOY",

@@ -1,5 +1,4 @@
 import React, {
-	ComponentProps,
 	memo,
 	useCallback,
 	useEffect,
@@ -12,22 +11,18 @@ import CssStyles from "./Carousel.module.css";
 import RadioGroup from "../RadioBtn/RadioGroup";
 import RadioBtn from "../RadioBtn/RadioBtn";
 import useIntersectionObserver from "../../Hooks/useIntersectionObserver";
+import usePrevious from "../../Hooks/usePrevious";
 
 //types--------------------------------------------------------------
+type VerticalAlignment = "top" | "bottom";
+type HorizontalAlignment = "left" | "right";
+type VerticalOrHorizontal = "vertical" | "horizontal";
 export type CarouselDotsContainerPositionType =
-	| "top-left-vertical"
-	| "top-left-horizontal"
-	| "top-centre"
-	| "top-right-horizontal"
-	| "top-right-vertical"
-	| "bottom-left-vertical"
-	| "bottom-left-horizontal"
-	| "bottom-centre"
-	| "bottom-right-horizontal"
-	| "bottom-right-vertical";
+	| `${VerticalAlignment}-${HorizontalAlignment}-${VerticalOrHorizontal}`
+	| `${VerticalAlignment}-centre`;
 
 export interface CarouselOptionsType {
-	CarouselContainerStyles?: React.CSSProperties; //different from slides container
+	CarouselContainerStyles?: React.CSSProperties; //container of the slides track, different from slidesContainer
 	CarouselArrows?: {
 		isTrue: boolean;
 		label?: string[];
@@ -49,6 +44,7 @@ export interface CarouselOptionsType {
 		TimingFunction?: string;
 		AnimationDuration: number;
 		AnimationDelay?: number;
+		AnimationType?: "standard" | "stack";
 	};
 	AutoSlideChange?: {
 		isTrue: boolean;
@@ -59,11 +55,10 @@ export interface CarouselOptionsType {
 	executeOnActiveSlide?: (ActiveSlide: number) => void;
 }
 
+// type primitives = string | number | boolean | null | undefined;
 interface CarouselPropsType extends CarouselOptionsType {
-	children:
-		| React.ReactElement<any, string | React.JSXElementConstructor<any>>
-		| React.ReactFragment
-		| React.ReactPortal;
+	children: React.ReactElement<React.HTMLAttributes<HTMLOrSVGElement>>;
+	// Exclude<React.ReactNode, primitives>;
 }
 
 //component----------------------------------------------------------------
@@ -72,7 +67,11 @@ function Carousel({
 	CarouselArrows = {
 		isTrue: true,
 	},
-	CarouselDots = { isTrue: true, AutoHideAfterTransition: false },
+	CarouselDots = {
+		isTrue: true,
+		AutoHideAfterTransition: false,
+		CarouselDotsContainerPosition: "bottom-centre",
+	},
 	AnimateOnWheelEvent = false,
 	isVertical = false,
 	isInfiniteLoop = true,
@@ -339,6 +338,7 @@ function Carousel({
 		setCarouselDotsLabelStyles
 	);
 	const [slideNo, setSlideNo] = useState<number>(0);
+	const prevSlideNo = usePrevious(slideNo);
 	const gapBetweenSlidesInPixels = useRef<number>(0);
 	const [autoSlideChangeIsPaused, setAutoSlideChangeIsPaused] = useState<
 		boolean | null
@@ -367,10 +367,18 @@ function Carousel({
 					//if child is a picture tag
 					//then map through its children and
 					//add styles to img element child
-					if (child.type === "picture" || child.type === "a") {
+					if (
+						child.type === "picture" ||
+						(child.type === "a" &&
+							child.props.children !== undefined)
+					) {
 						const grandchildren = React.Children.map(
-							child.props.children,
-							(grandChild, index) => {
+							child.props.children as React.ReactElement<
+								React.HTMLAttributes<
+									HTMLSourceElement | HTMLImageElement
+								>
+							>,
+							(grandChild) => {
 								//if child of picture element is
 								//an img tag then add styles
 								if (grandChild.type === "img") {
@@ -412,7 +420,7 @@ function Carousel({
 								? `${existingClasses} ${CssStyles["slide-media-img"]}`
 								: CssStyles["slide-media-img"],
 							draggable: "false",
-						} as ComponentProps<"image">);
+						});
 						//if child is a video
 						//element then add video specific styles
 					} else if (
@@ -428,7 +436,7 @@ function Carousel({
 								? `${existingClasses} ${CssStyles["slide-media-video"]}`
 								: CssStyles["slide-media-video"],
 							draggable: "false",
-						} as ComponentProps<"video">);
+						});
 					} else {
 						//else add generic slide styles
 						//if classes exist then include them
@@ -439,7 +447,7 @@ function Carousel({
 								? `${existingClasses} ${CssStyles.slide}`
 								: CssStyles.slide,
 							draggable: "false",
-						} as React.HTMLAttributes<HTMLElement>);
+						});
 					}
 				} else {
 					throw new Error(
@@ -461,18 +469,26 @@ function Carousel({
 				return;
 
 			const slidesContainer = slidesContainerRef.current;
-			const slideDimensions =
-				slidesContainer.firstElementChild!.getBoundingClientRect();
+			const slideDimensions = (
+				slidesContainer.firstElementChild as HTMLElement
+			).getBoundingClientRect();
 			//if isVertical --> slideHeight else slideWidth
 			let slideWidthOrHeight: number;
 			isVertical
 				? (slideWidthOrHeight = slideDimensions.height)
 				: (slideWidthOrHeight = slideDimensions.width);
 
+			const stackAnimationTrue =
+				AnimationOptions?.AnimationType === "stack";
 			// const transformBy = 100 * slideNo; //percentage
-			const transformBy =
-				(slideWidthOrHeight + gapBetweenSlidesInPixels.current) *
-				slideNo;
+			let transformBy: number;
+			if (stackAnimationTrue) {
+				transformBy = 100 * slideNo; // percentage
+			} else {
+				transformBy =
+					(slideWidthOrHeight + gapBetweenSlidesInPixels.current) *
+					slideNo;
+			}
 
 			const timingOptions = {
 				...carouselAnimationOptions.current,
@@ -481,7 +497,7 @@ function Carousel({
 
 			//get previously translated value and store it in a matrix
 			//transformX value = matrix.e, transformY value = matrix.f
-			const matrix = new DOMMatrix(
+			let matrix = new DOMMatrix(
 				getComputedStyle(slidesContainer).transform
 			);
 
@@ -508,57 +524,308 @@ function Carousel({
 			if (carouselDotsContainerAnimation)
 				carouselDotsContainerAnimation.pause();
 
-			if (isVertical) {
-				transitionSlidesOnChangingSlideNoAnimation.current =
-					slidesContainer.animate(
-						{
-							transform: [
-								`translate(${matrix.e}px,${matrix.f}px)`,
-								`translate(0,-${transformBy}px)`,
-							],
-						},
-						timingOptions
-					);
+			// function onSlideTransitionFinish() {
+			// 	transitionSlidesOnChangingSlideNoAnimation.current?.commitStyles();
+			// 	transitionSlidesOnChangingSlideNoAnimation.current?.cancel();
+			// 	transitionSlidesOnChangingSlideNoAnimation.current = undefined;
+			// 	// console.log("anim fin");
+			// }
 
-				//commit styles of last frame and remove animation (cancel method)
-				//on finish to prevent racking up unnecessary animation instances
-				transitionSlidesOnChangingSlideNoAnimation.current.onfinish =
-					function onAnimationEnd() {
-						transitionSlidesOnChangingSlideNoAnimation.current?.commitStyles();
-						transitionSlidesOnChangingSlideNoAnimation.current?.cancel();
-					};
+			let firstToLast = false;
+			let lastToFirst = false;
+			// if (isVertical) {
+			let slides: HTMLElement[];
+			if (stackAnimationTrue) {
+				slides = Array.from(slidesContainer.children) as HTMLElement[];
 
-				if (!carouselDotsContainerAnimation) {
-					return;
+				const lastSlideNo = slides.length;
+
+				if (
+					isInfiniteLoop &&
+					(prevSlideNo.current === -1 || prevSlideNo.current === 0) &&
+					slideNo === lastSlideNo
+				) {
+					firstToLast = true;
+					for (let index in slides) {
+						if (index === "0") {
+							slides[index].style.zIndex = "10";
+							continue;
+						}
+						if (index === String(lastSlideNo - 1)) {
+							slides[index].style.transform = isVertical
+								? "translateY(0)"
+								: "translateX(0)";
+						} else {
+							slides[index].style.transform = isVertical
+								? "translateY(100%)"
+								: "translateX(100%)";
+							// slides[index].style.zIndex = "10";
+						}
+					}
+
+					transitionSlidesOnChangingSlideNoAnimation.current =
+						slides[0].animate(
+							{
+								transform: [
+									"translateY(0)",
+									"translateY(100%)",
+								],
+							},
+							timingOptions
+						);
+				} else if (
+					isInfiniteLoop &&
+					prevSlideNo.current === lastSlideNo &&
+					slideNo === 0
+				) {
+					lastToFirst = true;
+					for (let index in slides) {
+						if (index === String(lastSlideNo - 1)) continue;
+						if (index === "0") slides[index].style.zIndex = "10";
+						slides[index].style.transform = isVertical
+							? "translateY(100%)"
+							: "translateX(100%)";
+					}
+
+					transitionSlidesOnChangingSlideNoAnimation.current =
+						slides[0].animate({
+							transform: isVertical
+								? ["translateY(100%)", "translateY(0)"]
+								: ["translateX(100%)", "translateX(0)"],
+						});
+				} else if (
+					// prevSlideNo.current === -1 ||
+					prevSlideNo.current < slideNo
+				) {
+					let count = 0;
+					const timer = Number(timingOptions.duration) ?? 850;
+					const promisedAnim = (
+						timer: number,
+						index: number,
+						prevTranslatedAmount: number | string = "100%"
+					) =>
+						new Promise((res) => {
+							// res(
+							setTimeout(() => {
+								res(
+									(() => {
+										transitionSlidesOnChangingSlideNoAnimation.current =
+											slides[index].animate(
+												{
+													transform: isVertical
+														? [
+																typeof prevTranslatedAmount ===
+																"number"
+																	? `translateY(${prevTranslatedAmount}px)`
+																	: `translateY(${prevTranslatedAmount})`,
+																`translateY(0)`,
+														  ]
+														: [
+																typeof prevTranslatedAmount ===
+																"number"
+																	? `translateX(${prevTranslatedAmount}px)`
+																	: `translateX(${prevTranslatedAmount})`,
+																`translateX(0)`,
+														  ],
+												},
+												timingOptions
+											);
+									})()
+								);
+							}, timer);
+						});
+					// );
+					// });
+					// eslint-disable-next-line no-inner-declarations
+					async function executeAnim() {
+						// cache prevSLideNo value for the if check
+						//in the for loop
+						const prevSlideNoForCurrentIteration =
+							prevSlideNo.current;
+						for (
+							let i =
+								prevSlideNo.current === -1
+									? 0
+									: prevSlideNo.current + 1;
+							i <= slideNo;
+							i++
+						) {
+							if (
+								i === 0 ||
+								i === prevSlideNoForCurrentIteration + 1
+							) {
+								let prevTranslatedAmount = new DOMMatrix(
+									getComputedStyle(slides[i]).transform
+								);
+								const prevTranslatedAmountX =
+									prevTranslatedAmount.e;
+								const prevTranslatedAmountY =
+									prevTranslatedAmount.f;
+								await promisedAnim(
+									count * timer,
+									i,
+									isVertical
+										? prevTranslatedAmountY
+										: prevTranslatedAmountX
+								);
+							} else {
+								await promisedAnim(count * timer, i);
+							}
+							count++;
+						}
+					}
+
+					executeAnim();
+				} else {
+					let count = 0;
+					const timer = Number(timingOptions.duration) ?? 850;
+					const promisedAnim = (
+						timer: number,
+						index: number,
+						prevTranslatedAmount: number | string = "0%"
+					) =>
+						new Promise((res) => {
+							// res(
+							setTimeout(() => {
+								res(
+									(() => {
+										transitionSlidesOnChangingSlideNoAnimation.current =
+											slides[index].animate(
+												{
+													transform: isVertical
+														? [
+																typeof prevTranslatedAmount ===
+																"number"
+																	? `translateY(${prevTranslatedAmount}px)`
+																	: `translateY(${prevTranslatedAmount})`,
+																`translateY(100%)`,
+														  ]
+														: [
+																typeof prevTranslatedAmount ===
+																"number"
+																	? `translateX(${prevTranslatedAmount}px)`
+																	: `translateX(${prevTranslatedAmount})`,
+																`translateX(100%)`,
+														  ],
+												},
+												timingOptions
+											);
+									})()
+								);
+							}, timer);
+						});
+					// eslint-disable-next-line no-inner-declarations
+					async function executeAnim() {
+						// cache prevSLideNo value for the if check
+						//in the for loop
+						const prevSlideNoForCurrentIteration =
+							prevSlideNo.current;
+						for (
+							let i =
+								prevSlideNo.current === -1
+									? 0
+									: prevSlideNo.current;
+							i > slideNo;
+							i--
+						) {
+							if (
+								i === 0 ||
+								i === prevSlideNoForCurrentIteration
+							) {
+								let prevTranslatedAmount = new DOMMatrix(
+									getComputedStyle(slides[i]).transform
+								);
+								const prevTranslatedAmountX =
+									prevTranslatedAmount.e;
+								const prevTranslatedAmountY =
+									prevTranslatedAmount.f;
+								await promisedAnim(
+									count * timer,
+									i,
+									isVertical
+										? prevTranslatedAmountY
+										: prevTranslatedAmountX
+								);
+							} else {
+								await promisedAnim(count * timer, i);
+							}
+							// if (
+							// 	transitionSlidesOnChangingSlideNoAnimation.current
+							// )
+							// 	transitionSlidesOnChangingSlideNoAnimation.current.onfinish =
+							// 		onSlideTransitionFinish;
+							count++;
+						}
+					}
+					executeAnim();
 				}
-
-				carouselDotsContainerAnimation.play();
 			} else {
 				transitionSlidesOnChangingSlideNoAnimation.current =
 					slidesContainer.animate(
 						{
-							transform: [
-								`translate(${matrix.e}px,${matrix.f}px)`,
-								`translate(-${transformBy}px,0)`,
-							],
+							transform: isVertical
+								? [
+										`translate(${matrix.e}px,${matrix.f}px)`,
+										`translate(0,-${transformBy}px)`,
+								  ]
+								: [
+										`translate(${matrix.e}px,${matrix.f}px)`,
+										`translate(-${transformBy}px,0)`,
+								  ],
 						},
 						timingOptions
 					);
-
-				transitionSlidesOnChangingSlideNoAnimation.current.onfinish =
-					function onAnimationEnd() {
-						transitionSlidesOnChangingSlideNoAnimation.current?.commitStyles();
-						transitionSlidesOnChangingSlideNoAnimation.current?.cancel();
-					};
-
-				if (!carouselDotsContainerAnimation) {
-					return;
-				}
-
-				carouselDotsContainerAnimation.play();
 			}
+
+			//commit styles of last frame and remove animation (cancel method)
+			//on finish to prevent racking up unnecessary animation instances
+			// transitionSlidesOnChangingSlideNoAnimation.current.onfinish =
+			// 	function onAnimationEnd() {
+			// 		transitionSlidesOnChangingSlideNoAnimation.current?.commitStyles();
+			// 		transitionSlidesOnChangingSlideNoAnimation.current?.cancel();
+			// 	};
+
+			if (!carouselDotsContainerAnimation) {
+				return;
+			}
+
+			carouselDotsContainerAnimation.play();
+
+			if (!transitionSlidesOnChangingSlideNoAnimation.current) return;
+
+			//commit styles of last frame and remove animation (cancel method)
+			//on finish to prevent racking up unnecessary animation instances
+			transitionSlidesOnChangingSlideNoAnimation.current.onfinish =
+				function onAnimationEnd() {
+					transitionSlidesOnChangingSlideNoAnimation.current?.commitStyles();
+					transitionSlidesOnChangingSlideNoAnimation.current?.cancel();
+					if (firstToLast || lastToFirst) {
+						const firstSlide =
+							slidesContainer.firstElementChild as HTMLElement;
+						if (firstToLast) {
+							firstSlide.style.transform = "";
+						}
+						if (lastToFirst) {
+							const lastSlide =
+								slidesContainer.lastElementChild as HTMLElement;
+							lastSlide.style.transform = isVertical
+								? "translateY(100%)"
+								: "translateX(100%)";
+						}
+						firstSlide.style.zIndex = "";
+						firstToLast
+							? (firstToLast = false)
+							: (lastToFirst = false);
+					}
+				};
 		},
-		[CarouselDots.AutoHideAfterTransition, isVertical]
+		[
+			AnimationOptions?.AnimationType,
+			CarouselDots.AutoHideAfterTransition,
+			isInfiniteLoop,
+			isVertical,
+			prevSlideNo,
+		]
 	);
 
 	//function to change slideNo
@@ -570,9 +837,9 @@ function Carousel({
 			}
 
 			if (incOrDec === "increment") {
-				setSlideNo((prev) => {
+				setSlideNo((currSlideNo) => {
 					if (
-						prev ===
+						currSlideNo ===
 						childrenWithStyleProp.length - NoOfSlidesInView
 					) {
 						if (isInfiniteLoop) {
@@ -581,27 +848,27 @@ function Carousel({
 							//returning the same value isn't going to
 							//trigger a re-render,hence I'm calling the
 							//changeSlide function inline
-							changeSlide(prev);
-							return prev;
+							changeSlide(currSlideNo);
+							return currSlideNo;
 						}
 					} else {
-						return prev + 1;
+						return currSlideNo + 1;
 					}
 				});
 			} else {
-				setSlideNo((prev) => {
-					if (prev === 0) {
+				setSlideNo((currSlideNo) => {
+					if (currSlideNo === 0) {
 						if (isInfiniteLoop) {
 							return (
 								childrenWithStyleProp.length - NoOfSlidesInView
 							);
 						} else {
 							//same as above
-							changeSlide(prev);
-							return prev;
+							changeSlide(currSlideNo);
+							return currSlideNo;
 						}
 					} else {
-						return prev - 1;
+						return currSlideNo - 1;
 					}
 				});
 			}
@@ -635,6 +902,20 @@ function Carousel({
 	);
 
 	//useLayoutEffects------------------------------------------------------------------------------
+
+	//arrange slides in a stack if AnimationOptions.AnimationType === stack
+	useLayoutEffect(() => {
+		if (AnimationOptions?.AnimationType !== "stack") return;
+
+		const slidesContainer = slidesContainerRef.current as HTMLDivElement;
+		const slides = Array.from(slidesContainer.children) as HTMLElement[];
+		for (let index in slides) {
+			if (index === "0") continue;
+			slides[index].style.transform = isVertical
+				? "translateY(100%)"
+				: "translateX(100%)";
+		}
+	}, [AnimationOptions?.AnimationType, isVertical]);
 
 	//change slide whenever slideNo changes
 	useLayoutEffect(() => {
@@ -725,10 +1006,14 @@ function Carousel({
 	useEffect(() => {
 		if (!slidesContainerRef.current) return;
 
+		// for AnimationOptions.AnimationType = standard
 		const slidesContainer = slidesContainerRef.current;
+		// for AnimationOptions.AnimationType = stack
+		let slideToAnimate: HTMLElement | null = null;
 		let startPosX: number;
 		let startPosY: number;
 		let firstInstance = true;
+		let secondInstance = false;
 		let prevTranslatedAmount: DOMMatrix;
 		let prevY: number;
 		let prevX: number;
@@ -738,7 +1023,8 @@ function Carousel({
 		} as KeyframeAnimationOptions;
 
 		let animation: Animation;
-		let moveDirection: "x" | "y";
+		let moveDirectionAxis: "x" | "y";
+		let moveDirection: "up" | "down" | "left" | "right";
 
 		let shouldExecute = false;
 
@@ -782,7 +1068,7 @@ function Carousel({
 				}
 				let diff: number;
 				let translateAmount: number;
-				if (moveDirection === "x") {
+				if (moveDirectionAxis === "x") {
 					//only read movement along the x-axis
 					diff = startPosX - e.clientX;
 
@@ -807,16 +1093,25 @@ function Carousel({
 							: (translateAmount = 0);
 					}
 
-					animation = slidesContainer.animate(
-						{
-							//only animate in the direction the user is dragging the slides
-							transform: [
-								`translate(${prevX}px,${prevY}px)`,
-								`translate(${translateAmount}px,${prevY}px)`,
-							],
-						},
-						timingOptions
-					);
+					const keyframesObject = {
+						//only animate in the direction the user is dragging the slides
+						transform: [
+							`translate(${prevX}px,${prevY}px)`,
+							`translate(${translateAmount}px,${prevY}px)`,
+						],
+					} as PropertyIndexedKeyframes;
+
+					if (slideToAnimate) {
+						animation = (slideToAnimate as HTMLElement).animate(
+							keyframesObject,
+							timingOptions
+						);
+					} else {
+						animation = slidesContainer.animate(
+							keyframesObject,
+							timingOptions
+						);
+					}
 
 					prevX = translateAmount;
 				} else {
@@ -841,31 +1136,112 @@ function Carousel({
 							: (translateAmount = 0);
 					}
 
-					animation = slidesContainer.animate(
-						{
-							transform: [
-								`translate(${prevX}px,${prevY}px)`,
-								`translate(${prevX}px,${translateAmount}px)`,
-							],
-						},
-						timingOptions
-					);
+					const keyframesObject = {
+						transform: [
+							`translate(${prevX}px,${prevY}px)`,
+							`translate(${prevX}px,${translateAmount}px)`,
+						],
+					} as PropertyIndexedKeyframes;
+					if (slideToAnimate) {
+						animation = slideToAnimate.animate(
+							keyframesObject,
+							timingOptions
+						);
+					} else {
+						animation = slidesContainer.animate(
+							keyframesObject,
+							timingOptions
+						);
+					}
 
 					prevY = translateAmount;
 				}
 			}
 
+			if (secondInstance) {
+				if (!(AnimationOptions?.AnimationType === "stack")) {
+					secondInstance = false;
+					return;
+				}
+
+				if (moveDirectionAxis === "x") {
+					moveDirection =
+						startPosX - e.clientX < 0 ? "right" : "left";
+
+					//get which slide to animate using setState to get
+					//currState value
+					const slides = Array.from(
+						slidesContainer.children
+					) as HTMLElement[];
+					const currSlideNo = Number(
+						slidesContainer.getAttribute("data-active-slide")
+					);
+
+					if (
+						moveDirection === "left" &&
+						currSlideNo !== slides.length - 1
+					) {
+						//if movement towards the left, animate subsequent slide
+						slideToAnimate = slides[currSlideNo + 1];
+					} else if (moveDirection === "right" && currSlideNo !== 0) {
+						//if movement towards the right, animate current slide
+						slideToAnimate = slides[currSlideNo];
+					}
+
+					if (slideToAnimate) {
+						prevTranslatedAmount = new DOMMatrix(
+							getComputedStyle(slideToAnimate).transform
+						);
+						prevX = prevTranslatedAmount.e;
+						prevY = prevTranslatedAmount.f;
+						// console.log(prevX, prevY);
+					}
+				} else {
+					moveDirection = startPosY - e.clientY < 0 ? "down" : "up";
+
+					//get which slide to animate using setState to get
+					//currState value
+					const slides = Array.from(
+						slidesContainer.children
+					) as HTMLElement[];
+					const currSlideNo = Number(
+						slidesContainer.getAttribute("data-active-slide")
+					);
+
+					if (
+						moveDirection === "up" &&
+						currSlideNo !== slides.length - 1
+					) {
+						//if movement towards the left, animate subsequent slide
+						slideToAnimate = slides[currSlideNo + 1];
+					} else if (moveDirection === "down" && currSlideNo !== 0) {
+						//if movement towards the right, animate current slide
+						slideToAnimate = slides[currSlideNo];
+					}
+
+					if (slideToAnimate) {
+						prevTranslatedAmount = new DOMMatrix(
+							getComputedStyle(slideToAnimate).transform
+						);
+						prevX = prevTranslatedAmount.e;
+						prevY = prevTranslatedAmount.f;
+					}
+				}
+				secondInstance = false;
+				shouldExecute = true;
+			}
 			if (firstInstance) {
 				let diffX = startPosX - e.clientX;
 				let diffY = startPosY - e.clientY;
 				//once user drags the slide in a certain direction
 				//only allow movement in that particular direction
 				Math.abs(diffX) > Math.abs(diffY)
-					? (moveDirection = "x")
-					: (moveDirection = "y");
-				// console.log(moveDirection);
+					? (moveDirectionAxis = "x")
+					: (moveDirectionAxis = "y");
+				// console.log(moveDirectionAxis);
 				firstInstance = false;
-				shouldExecute = true;
+				secondInstance = true;
+				slideToAnimate = null;
 			}
 		}
 
@@ -895,10 +1271,41 @@ function Carousel({
 				// (!isVertical && moveDirection === "y") ||
 				Math.abs(diff) < threshold
 			) {
-				setSlideNo((prev) => {
-					changeSlide(prev);
-					return prev;
-				});
+				if (slideToAnimate) {
+					// const prevTranslatedVal = new DOMMatrix(
+					// 	getComputedStyle(slideToAnimate).transform
+					// );
+					let translateTo: string;
+					switch (moveDirection) {
+						case "left":
+							translateTo = `translate(100%,0)`;
+							break;
+						case "right":
+							translateTo = "translate(0,0)";
+							break;
+						case "down":
+							translateTo = "translate(0,0)";
+							break;
+						default:
+							translateTo = "translate(100%,0)";
+							break;
+					}
+
+					animation = slideToAnimate.animate(
+						{
+							transform: [
+								`translate(${prevX}px,${prevY}px)`,
+								translateTo,
+							],
+						},
+						timingOptions
+					);
+				} else {
+					setSlideNo((currSlideNo) => {
+						changeSlide(currSlideNo);
+						return currSlideNo;
+					});
+				}
 			} else {
 				// if (diff > 0 && Math.abs(diff) > threshold) {
 				if (diff > 0) {
@@ -933,6 +1340,7 @@ function Carousel({
 			// slidesContainer.style.cursor = "initial";
 		};
 	}, [
+		AnimationOptions?.AnimationType,
 		IncrementOrDecrementSlideNo,
 		changeSlide,
 		isVertical,
@@ -1005,11 +1413,11 @@ function Carousel({
 		if (!autoSlideChangeIsPaused) {
 			timer = setInterval(() => {
 				// IncrementOrDecrementSlideNo("increment");
-				setSlideNo((prev) => {
-					if (prev === childrenWithStyleProp.length - 1) {
+				setSlideNo((currSlideNo) => {
+					if (currSlideNo === childrenWithStyleProp.length - 1) {
 						return 0;
 					}
-					return prev + 1;
+					return currSlideNo + 1;
 				});
 			}, AutoSlideChange.timer);
 		}
@@ -1030,7 +1438,7 @@ function Carousel({
 	//pause interval (auto slide transitions)
 	useEffect(() => {
 		//event handler
-		const changeAutoSlideChangeState = (e: Event) => {
+		const changeAutoSlideChangeState = () => {
 			if (document.visibilityState === "hidden") {
 				settingAutoSlideChangePause(true);
 			}
@@ -1100,6 +1508,7 @@ function Carousel({
 				style={slidesContainerStyles}
 				ref={slidesContainerRef}
 				className={CssStyles["slides-container"]}
+				data-active-slide={slideNo}
 			>
 				{childrenWithStyleProp}
 			</div>
