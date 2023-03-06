@@ -55,9 +55,9 @@ export interface CarouselOptionsType {
 	executeOnActiveSlide?: (ActiveSlide: number) => void;
 }
 
-// type primitives = string | number | boolean | null | undefined;
+type child = React.ReactElement<React.HTMLAttributes<HTMLOrSVGElement>>;
 interface CarouselPropsType extends CarouselOptionsType {
-	children: React.ReactElement<React.HTMLAttributes<HTMLOrSVGElement>>;
+	children: child | child[];
 	// Exclude<React.ReactNode, primitives>;
 }
 
@@ -122,6 +122,14 @@ function Carousel({
 		const styleObj: React.CSSProperties = {
 			"--grid-items-in-view": NoOfSlidesInView,
 			"--grid-gap": GapBetweenSlides,
+			"--grid-area-name-for-children":
+				AnimationOptions?.AnimationType === "stack"
+					? "slide"
+					: "initial",
+			gridTemplateAreas:
+				AnimationOptions?.AnimationType === "stack"
+					? "'slide'"
+					: "initial",
 		} as React.CSSProperties;
 
 		//setting up Carousel direction
@@ -464,7 +472,8 @@ function Carousel({
 		(slideNo: number) => {
 			if (
 				!transitionSlidesOnChangingSlideNoAnimation ||
-				!slidesContainerRef.current
+				!slidesContainerRef.current ||
+				prevSlideNo.current === -1
 			)
 				return;
 
@@ -497,9 +506,10 @@ function Carousel({
 
 			//get previously translated value and store it in a matrix
 			//transformX value = matrix.e, transformY value = matrix.f
-			let matrix = new DOMMatrix(
-				getComputedStyle(slidesContainer).transform
-			);
+			// let matrix = new DOMMatrix(
+			// 	getComputedStyle(slidesContainer).transform
+			// );
+			let matrix: DOMMatrix;
 
 			//setting up carousel dots animation if specified
 			let carouselDotsContainerAnimation: null | Animation = null;
@@ -524,242 +534,87 @@ function Carousel({
 			if (carouselDotsContainerAnimation)
 				carouselDotsContainerAnimation.pause();
 
-			// function onSlideTransitionFinish() {
-			// 	transitionSlidesOnChangingSlideNoAnimation.current?.commitStyles();
-			// 	transitionSlidesOnChangingSlideNoAnimation.current?.cancel();
-			// 	transitionSlidesOnChangingSlideNoAnimation.current = undefined;
-			// 	// console.log("anim fin");
-			// }
-
-			let firstToLast = false;
-			let lastToFirst = false;
-			// if (isVertical) {
-			let slides: HTMLElement[];
+			// if AnimationOptions.AnimationType === "stack"
 			if (stackAnimationTrue) {
-				slides = Array.from(slidesContainer.children) as HTMLElement[];
+				const slides = Array.from(
+					slidesContainer.children
+				) as HTMLElement[];
+				const prevSlideNum = prevSlideNo.current;
 
-				const lastSlideNo = slides.length;
+				if (prevSlideNum < slideNo) {
+					const slideToAnimate = slides[slideNo];
+					// read current transform values
+					matrix = new DOMMatrix(
+						getComputedStyle(slideToAnimate).transform
+					);
 
-				if (
-					isInfiniteLoop &&
-					(prevSlideNo.current === -1 || prevSlideNo.current === 0) &&
-					slideNo === lastSlideNo
-				) {
-					firstToLast = true;
-					for (let index in slides) {
-						if (index === "0") {
-							slides[index].style.zIndex = "10";
-							continue;
+					const anim = slideToAnimate.animate(
+						{
+							transform: isVertical
+								? [`translateY(${matrix.f}px)`, "translateY(0)"]
+								: [
+										`translateX(${matrix.e}px)`,
+										"translateX(0)",
+								  ],
+						},
+						timingOptions
+					);
+
+					const diffInSlideNos = slideNo - prevSlideNum;
+
+					anim.onfinish = function onAnimFin() {
+						// shift all intermediate slides
+						if (diffInSlideNos > 1) {
+							for (let i = prevSlideNum + 1; i < slideNo; i++) {
+								slides[i].style.transform = isVertical
+									? "translateY(0%)"
+									: "translateX(0%)";
+							}
 						}
-						if (index === String(lastSlideNo - 1)) {
-							slides[index].style.transform = isVertical
-								? "translateY(0)"
-								: "translateX(0)";
-						} else {
-							slides[index].style.transform = isVertical
+
+						// clear animation instance
+						anim.commitStyles();
+						anim.cancel();
+					};
+					// else if prevSlideNo > slideNo
+				} else {
+					const slideToAnimate = slides[prevSlideNum];
+					// read current transform values
+					matrix = new DOMMatrix(
+						getComputedStyle(slideToAnimate).transform
+					);
+
+					const diffInSlideNos = prevSlideNum - slideNo;
+
+					// shift all intermediate slides before performing animation
+					if (diffInSlideNos > 1) {
+						for (let i = slideNo + 1; i < prevSlideNum; i++) {
+							slides[i].style.transform = isVertical
 								? "translateY(100%)"
 								: "translateX(100%)";
-							// slides[index].style.zIndex = "10";
 						}
 					}
 
 					transitionSlidesOnChangingSlideNoAnimation.current =
-						slides[0].animate(
+						slideToAnimate.animate(
 							{
-								transform: [
-									"translateY(0)",
-									"translateY(100%)",
-								],
+								transform: isVertical
+									? [
+											`translateY(${matrix.f}px)`,
+											"translateY(100%)",
+									  ]
+									: [
+											`translateX(${matrix.e}px)`,
+											"translateX(100%)",
+									  ],
 							},
 							timingOptions
 						);
-				} else if (
-					isInfiniteLoop &&
-					prevSlideNo.current === lastSlideNo &&
-					slideNo === 0
-				) {
-					lastToFirst = true;
-					for (let index in slides) {
-						if (index === String(lastSlideNo - 1)) continue;
-						if (index === "0") slides[index].style.zIndex = "10";
-						slides[index].style.transform = isVertical
-							? "translateY(100%)"
-							: "translateX(100%)";
-					}
-
-					transitionSlidesOnChangingSlideNoAnimation.current =
-						slides[0].animate({
-							transform: isVertical
-								? ["translateY(100%)", "translateY(0)"]
-								: ["translateX(100%)", "translateX(0)"],
-						});
-				} else if (
-					// prevSlideNo.current === -1 ||
-					prevSlideNo.current < slideNo
-				) {
-					let count = 0;
-					const timer = Number(timingOptions.duration) ?? 850;
-					const promisedAnim = (
-						timer: number,
-						index: number,
-						prevTranslatedAmount: number | string = "100%"
-					) =>
-						new Promise((res) => {
-							// res(
-							setTimeout(() => {
-								res(
-									(() => {
-										transitionSlidesOnChangingSlideNoAnimation.current =
-											slides[index].animate(
-												{
-													transform: isVertical
-														? [
-																typeof prevTranslatedAmount ===
-																"number"
-																	? `translateY(${prevTranslatedAmount}px)`
-																	: `translateY(${prevTranslatedAmount})`,
-																`translateY(0)`,
-														  ]
-														: [
-																typeof prevTranslatedAmount ===
-																"number"
-																	? `translateX(${prevTranslatedAmount}px)`
-																	: `translateX(${prevTranslatedAmount})`,
-																`translateX(0)`,
-														  ],
-												},
-												timingOptions
-											);
-									})()
-								);
-							}, timer);
-						});
-					// );
-					// });
-					// eslint-disable-next-line no-inner-declarations
-					async function executeAnim() {
-						// cache prevSLideNo value for the if check
-						//in the for loop
-						const prevSlideNoForCurrentIteration =
-							prevSlideNo.current;
-						for (
-							let i =
-								prevSlideNo.current === -1
-									? 0
-									: prevSlideNo.current + 1;
-							i <= slideNo;
-							i++
-						) {
-							if (
-								i === 0 ||
-								i === prevSlideNoForCurrentIteration + 1
-							) {
-								let prevTranslatedAmount = new DOMMatrix(
-									getComputedStyle(slides[i]).transform
-								);
-								const prevTranslatedAmountX =
-									prevTranslatedAmount.e;
-								const prevTranslatedAmountY =
-									prevTranslatedAmount.f;
-								await promisedAnim(
-									count * timer,
-									i,
-									isVertical
-										? prevTranslatedAmountY
-										: prevTranslatedAmountX
-								);
-							} else {
-								await promisedAnim(count * timer, i);
-							}
-							count++;
-						}
-					}
-
-					executeAnim();
-				} else {
-					let count = 0;
-					const timer = Number(timingOptions.duration) ?? 850;
-					const promisedAnim = (
-						timer: number,
-						index: number,
-						prevTranslatedAmount: number | string = "0%"
-					) =>
-						new Promise((res) => {
-							// res(
-							setTimeout(() => {
-								res(
-									(() => {
-										transitionSlidesOnChangingSlideNoAnimation.current =
-											slides[index].animate(
-												{
-													transform: isVertical
-														? [
-																typeof prevTranslatedAmount ===
-																"number"
-																	? `translateY(${prevTranslatedAmount}px)`
-																	: `translateY(${prevTranslatedAmount})`,
-																`translateY(100%)`,
-														  ]
-														: [
-																typeof prevTranslatedAmount ===
-																"number"
-																	? `translateX(${prevTranslatedAmount}px)`
-																	: `translateX(${prevTranslatedAmount})`,
-																`translateX(100%)`,
-														  ],
-												},
-												timingOptions
-											);
-									})()
-								);
-							}, timer);
-						});
-					// eslint-disable-next-line no-inner-declarations
-					async function executeAnim() {
-						// cache prevSLideNo value for the if check
-						//in the for loop
-						const prevSlideNoForCurrentIteration =
-							prevSlideNo.current;
-						for (
-							let i =
-								prevSlideNo.current === -1
-									? 0
-									: prevSlideNo.current;
-							i > slideNo;
-							i--
-						) {
-							if (
-								i === 0 ||
-								i === prevSlideNoForCurrentIteration
-							) {
-								let prevTranslatedAmount = new DOMMatrix(
-									getComputedStyle(slides[i]).transform
-								);
-								const prevTranslatedAmountX =
-									prevTranslatedAmount.e;
-								const prevTranslatedAmountY =
-									prevTranslatedAmount.f;
-								await promisedAnim(
-									count * timer,
-									i,
-									isVertical
-										? prevTranslatedAmountY
-										: prevTranslatedAmountX
-								);
-							} else {
-								await promisedAnim(count * timer, i);
-							}
-							// if (
-							// 	transitionSlidesOnChangingSlideNoAnimation.current
-							// )
-							// 	transitionSlidesOnChangingSlideNoAnimation.current.onfinish =
-							// 		onSlideTransitionFinish;
-							count++;
-						}
-					}
-					executeAnim();
 				}
 			} else {
+				matrix = new DOMMatrix(
+					getComputedStyle(slidesContainer).transform
+				);
 				transitionSlidesOnChangingSlideNoAnimation.current =
 					slidesContainer.animate(
 						{
@@ -777,19 +632,9 @@ function Carousel({
 					);
 			}
 
-			//commit styles of last frame and remove animation (cancel method)
-			//on finish to prevent racking up unnecessary animation instances
-			// transitionSlidesOnChangingSlideNoAnimation.current.onfinish =
-			// 	function onAnimationEnd() {
-			// 		transitionSlidesOnChangingSlideNoAnimation.current?.commitStyles();
-			// 		transitionSlidesOnChangingSlideNoAnimation.current?.cancel();
-			// 	};
-
-			if (!carouselDotsContainerAnimation) {
-				return;
+			if (carouselDotsContainerAnimation) {
+				carouselDotsContainerAnimation.play();
 			}
-
-			carouselDotsContainerAnimation.play();
 
 			if (!transitionSlidesOnChangingSlideNoAnimation.current) return;
 
@@ -799,30 +644,11 @@ function Carousel({
 				function onAnimationEnd() {
 					transitionSlidesOnChangingSlideNoAnimation.current?.commitStyles();
 					transitionSlidesOnChangingSlideNoAnimation.current?.cancel();
-					if (firstToLast || lastToFirst) {
-						const firstSlide =
-							slidesContainer.firstElementChild as HTMLElement;
-						if (firstToLast) {
-							firstSlide.style.transform = "";
-						}
-						if (lastToFirst) {
-							const lastSlide =
-								slidesContainer.lastElementChild as HTMLElement;
-							lastSlide.style.transform = isVertical
-								? "translateY(100%)"
-								: "translateX(100%)";
-						}
-						firstSlide.style.zIndex = "";
-						firstToLast
-							? (firstToLast = false)
-							: (lastToFirst = false);
-					}
 				};
 		},
 		[
 			AnimationOptions?.AnimationType,
 			CarouselDots.AutoHideAfterTransition,
-			isInfiniteLoop,
 			isVertical,
 			prevSlideNo,
 		]

@@ -28,11 +28,12 @@
 		(100% - var(--grid-gutters-in-view) * var(--grid-gap)) /
 			var(--grid-items-in-view)
 	);
+	--grid-area-name-for-children: initial;
 	height: 100%;
 	display: grid;
 	gap: var(--grid-gap);
 	grid-auto-flow: column;
-	grid-template-areas: "slide";
+	/* grid-template-areas: "slide"; */
 	/* grid-auto-columns: 100%; */
 	grid-auto-columns: var(--grid-column-or-row-width);
 	/* grid-auto-rows: 100%; */
@@ -46,7 +47,7 @@
 	object-fit: cover;
 	width: 100%;
 	height: 100%;
-	grid-area: slide;
+	grid-area: var(--grid-area-name-for-children);
 }
 
 .slide-media-video {
@@ -55,7 +56,7 @@
 	object-fit: cover;
 	max-width: 100%;
 	height: 100%;
-	grid-area: slide;
+	grid-area: var(--grid-area-name-for-children);
 }
 
 .slide {
@@ -63,7 +64,7 @@
 	width: 100%;
 	height: 100%;
 	text-shadow: none;
-	grid-area: slide;
+	grid-area: var(--grid-area-name-for-children);
 }
 
 .prev-btn,
