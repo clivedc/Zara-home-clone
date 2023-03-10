@@ -1,57 +1,39 @@
-import React, {
-	useCallback,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
-// import { NavLink } from "react-router-dom";
-import Carousel, { CarouselOptionsType } from "../Carousel/Carousel";
-// import { useCategoryContext } from "../Header/Header";
-import RadioBtn from "../RadioBtn/RadioBtn";
-import RadioGroup from "../RadioBtn/RadioGroup";
-import Video from "../Video Component/Video";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import Carousel, {
+	CarouselOptionsType,
+	CarouselDotsBaseType,
+} from "../Carousel/Carousel";
 import {
 	setVerticalCarouselLastSlide,
 	setVerticalCarouselDotsWithLabels,
 } from "./utils";
 import "./Home.css";
+import Video from "../Video Component/Video";
 
+type category = "woman" | "man" | "kids";
 interface HomePropsType {
-	category: string | undefined;
+	category: category;
+	setCategory: React.Dispatch<React.SetStateAction<category>>;
 	setHeaderLogoColor: React.Dispatch<React.SetStateAction<"black" | "white">>;
 }
 
 //component--------------------------------------------------------------------------------------
-const Home = ({ category, setHeaderLogoColor }: HomePropsType) => {
+const Home = ({ category, setCategory, setHeaderLogoColor }: HomePropsType) => {
 	//state variables------------------------------------------------------------------
 
-	const [settingActiveSlideNoWOMAN, set_SettingActiveSlideNoWOMAN] = useState<
+	const [activeSlideNoWOMAN, setActiveSlideNoWOMAN] = useState<
 		number | undefined
 	>(undefined);
-	const [settingActiveSlideNoMAN, set_SettingActiveSlideNoMAN] = useState<
+	const [activeSlideNoMAN, setActiveSlideNoMAN] = useState<
 		number | undefined
 	>(undefined);
-	const [settingActiveSlideNoKIDS, set_SettingActiveSlideNoKIDS] = useState<
+	const [activeSlideNoKIDS, setActiveSlideNoKIDS] = useState<
 		number | undefined
 	>(undefined);
-	const [
-		settingActiveSlideNoForHorizontalCarousel,
-		set_SettingActiveSlideNoForHorizontalCarousel,
-	] = useState<number | undefined>(undefined);
-	const [currentlyActiveSlideNoWOMAN, getCurrentlyActiveSlideNoWOMAN] =
-		useState<number>(0);
-	const [currentlyActiveSlideNoMAN, getCurrentlyActiveSlideNoMAN] =
-		useState<number>(0);
-	const [currentlyActiveSlideNoKIDS, getCurrentlyActiveSlideNoKIDS] =
-		useState<number>(0);
-	// const [carouselDotValueWOMAN, setCarouselDotValueWOMAN] = useState(0);
-	// const [carouselDotValueMAN, setCarouselDotValueMAN] = useState(0);
-	// const [carouselDotValueKIDS, setCarouselDotValueKIDS] = useState(0);
+
 	const [verticalCarouselLastSlide] = useState<JSX.Element>(
 		setVerticalCarouselLastSlide
 	);
-	// const { category, setHeaderLogoColor } = useCategoryContext();
 	const [verticalCarouselDotsWithLabels] = useState(
 		setVerticalCarouselDotsWithLabels
 	);
@@ -82,422 +64,794 @@ const Home = ({ category, setHeaderLogoColor }: HomePropsType) => {
 			CarouselDots: {
 				isTrue: true,
 				CarouselDotsContainerPosition: "bottom-right-vertical",
-				AutoHideAfterTransition: true,
+				CarouselDotsAdditionalStyles: {
+					paddingRight: "3rem",
+					gap: "1.2rem",
+				},
+			},
+			AnimationOptions: {
+				AnimationDuration: 900,
+				AnimationType: "stack",
 			},
 			AnimateOnWheelEvent: true,
 			isVertical: true,
 			AutoSlideChange: {
 				isTrue: true,
-				timer: 3000,
+				timer: 4000,
+				waitUntilVideoHasFinishedPlayingToMoveToNextSlide: true,
 			},
 		};
 	}, []);
 
 	//useEffects -----------------------------------------------------------------------------------
-	// useEffect(() => {
-	// 	console.log(
-	// 		currentlyActiveSlideNoWOMAN ===
-	// 			verticalCarouselDotsWithLabels.Woman.length - 1
-	// 	);
-	// }, [
-	// 	currentlyActiveSlideNoWOMAN,
-	// 	verticalCarouselDotsWithLabels.Woman.length,
-	// ]);
 
 	useEffect(() => {
 		if (!category) return;
 
 		if (category === "woman") {
-			set_SettingActiveSlideNoWOMAN(() => {
+			setActiveSlideNoWOMAN(() => {
 				//force change even when state value is the same
-				queueMicrotask(() => set_SettingActiveSlideNoWOMAN(0));
+				queueMicrotask(() => setActiveSlideNoWOMAN(0));
 				return undefined;
 			});
-			set_SettingActiveSlideNoForHorizontalCarousel(0);
 		} else if (category === "man") {
-			set_SettingActiveSlideNoMAN(() => {
+			setActiveSlideNoMAN(() => {
 				//force change even when state value is the same
-				queueMicrotask(() => set_SettingActiveSlideNoMAN(0));
+				queueMicrotask(() => setActiveSlideNoMAN(0));
 				return undefined;
 			});
-			set_SettingActiveSlideNoForHorizontalCarousel(1);
 		} else {
-			set_SettingActiveSlideNoKIDS(() => {
+			setActiveSlideNoKIDS(() => {
 				//force change even when state value is the same
-				queueMicrotask(() => set_SettingActiveSlideNoKIDS(0));
+				queueMicrotask(() => setActiveSlideNoKIDS(0));
 				return undefined;
 			});
-			set_SettingActiveSlideNoForHorizontalCarousel(2);
 		}
 	}, [category]);
 
 	//custom functions-----------------------------------------------------------------------------------------
 
-	const onCustomRadioInputChange = useCallback(function (
-		setState: React.Dispatch<React.SetStateAction<number | undefined>>
-	) {
-		return (e: React.ChangeEvent) => {
-			const radioIndex = Number(
-				e.currentTarget.getAttribute("data-order")
+	const executeOnHzntlCarouselActiveSlide = useCallback(
+		function executeOnHzntlCarouselActiveSlide(slideNo: number) {
+			setCategory(
+				slideNo === 0 ? "woman" : slideNo === 1 ? "man" : "kids"
 			);
-
-			setState((prev) => {
-				//force change even when state value is the same
-				if (prev === radioIndex) {
-					queueMicrotask(() => setState(radioIndex));
-					return undefined;
-				}
-				return radioIndex;
-			});
-		};
-	},
-	[]);
-
-	const executeOnActiveSlide = useCallback(function (
-		setDefaultCheckedRadio: React.Dispatch<React.SetStateAction<number>>
-	) {
-		return (currentlyActiveSlideNo: number) => {
-			setDefaultCheckedRadio(currentlyActiveSlideNo);
-		};
-	},
-	[]);
-
-	// const getCarouselDotValueOnChange = (setState:React.Dispatch<React.SetStateAction<number>>) => {
-	// 	return (e:React.ChangeEvent) => {
-	// 		const ele = e.currentTarget as HTMLInputElement;
-	// 		const activeVal = Number(ele.getAttribute("data-order"));
-	// 		setState(activeVal);
-	// 	};
-	// }
+		},
+		[setCategory]
+	);
 
 	//----------------------------------------------------------------------------------------------------------
 
 	return (
 		<Carousel
 			{...horizontalCarouselOptions}
-			setActiveSlide={settingActiveSlideNoForHorizontalCarousel}
+			setActiveSlide={
+				category === "woman" ? 0 : category === "man" ? 1 : 2
+			}
+			executeOnActiveSlide={executeOnHzntlCarouselActiveSlide}
 		>
-			<div className="hzntl-carousel-container hzntl-carousel-container--woman-section">
-				<Carousel
-					{...verticalCarouselOptions}
-					CarouselDots={{
-						...verticalCarouselOptions.CarouselDots!,
-						label: verticalCarouselDotsWithLabels.Woman,
-					}}
-					setActiveSlide={settingActiveSlideNoWOMAN}
-					executeOnActiveSlide={executeOnActiveSlide(
-						getCurrentlyActiveSlideNoWOMAN
-					)}
-				>
-					<Video
-						loop
-						// poster={require("https://source.unsplash.random/300x300/?perfume,bottle")}
-						dataDesktopLargeSrc={require("../../Video/WOMAN_NEW_desktop.mp4")}
-						dataIpadPortraitSrc={require("../../Video/WOMAN_NEW_phone.mp4")}
+			<Carousel
+				{...verticalCarouselOptions}
+				CarouselDots={{
+					...(verticalCarouselOptions.CarouselDots as CarouselDotsBaseType),
+					label: verticalCarouselDotsWithLabels.Woman,
+				}}
+				setActiveSlide={activeSlideNoWOMAN}
+			>
+				<picture>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_woman/new/WOMAN_NEW-portrait-fill-phone.jpg?as=webp")}
 					/>
-					<picture>
-						<source
-							media="(max-width: 480px)"
-							srcSet={require("../../Images/Home_pg/WOMAN/WOMAN_BASICS/WOMAN_BASICS_IMAGE-portrait-fill-phone.jpg")}
-						/>
-						<source
-							media="(max-width: 768px) and (orientation: portrait)"
-							srcSet={require("../../Images/Home_pg/WOMAN/WOMAN_BASICS/WOMAN_BASICS_IMAGE-portrait-fill-ipad.jpg")}
-						/>
-						<source
-							media="(max-width: 1024px)"
-							srcSet={require("../../Images/Home_pg/WOMAN/WOMAN_BASICS/WOMAN_BASICS_IMAGE-landscape-1200px.jpg")}
-						/>
-						<img
-							src={require("../../Images/Home_pg/WOMAN/WOMAN_BASICS/WOMAN_BASICS_IMAGE-landscape-2400px.jpg")}
-							alt="side profile of a woman standing"
-						/>
-					</picture>
-					<picture>
-						<source
-							media="(max-width: 480px)"
-							srcSet={require("../../Images/Home_pg/WOMAN/WOMAN_SHOES/WOMAN_SHOES_IMAGE-portrait-fill-phone.jpg")}
-						/>
-						<source
-							media="(max-width: 768px) and (orientation: portrait)"
-							srcSet={require("../../Images/Home_pg/WOMAN/WOMAN_SHOES/WOMAN_SHOES_IMAGE-portrait-fill-ipad.jpg")}
-						/>
-						<source
-							media="(max-width: 1024px)"
-							srcSet={require("../../Images/Home_pg/WOMAN/WOMAN_SHOES/WOMAN_SHOES_IMAGE-landscape-1200px.jpg")}
-						/>
-						<img
-							src={require("../../Images/Home_pg/WOMAN/WOMAN_SHOES/WOMAN_SHOES_IMAGE-landscape-2400px.jpg")}
-							alt="woman's sandal"
-						/>
-					</picture>
-					<picture>
-						<source
-							media="(max-width: 480px)"
-							srcSet={require("../../Images/Home_pg/WOMAN/WOMAN_SHIRTS/WOMAN_SHIRTS_IMAGE-portrait-fill-phone.jpg")}
-						/>
-						<source
-							media="(max-width: 768px) and (orientation: portrait)"
-							srcSet={require("../../Images/Home_pg/WOMAN/WOMAN_SHIRTS/WOMAN_SHIRTS_IMAGE-portrait-fill-ipad.jpg")}
-						/>
-						<source
-							media="(max-width: 1024px)"
-							srcSet={require("../../Images/Home_pg/WOMAN/WOMAN_SHIRTS/WOMAN_SHIRTS_IMAGE-landscape-1200px.jpg")}
-						/>
-						<img
-							src={require("../../Images/Home_pg/WOMAN/WOMAN_SHIRTS/WOMAN_SHIRTS_IMAGE-landscape-2400px.jpg")}
-							alt="woman's shirt"
-						/>
-					</picture>
-					{verticalCarouselLastSlide}
-				</Carousel>
-				<RadioGroup
-					// className="hzntl-carousel-container__radio-grp hzntl-carousel-container__radio-grp--woman-section"
-					className={
-						currentlyActiveSlideNoWOMAN ===
-						verticalCarouselDotsWithLabels.Woman.length - 1
-							? "hzntl-carousel-container__radio-grp--hidden"
-							: "hzntl-carousel-container__radio-grp"
-					}
-					controlled={true}
-					// onPointerDown={(e) => e.stopPropagation()}
-					// onPointerMove={(e) => e.stopPropagation()}
-					// onPointerUp={(e) => e.stopPropagation()}
-					// onPointerLeave={(e) => e.stopPropagation()}
-				>
-					{verticalCarouselDotsWithLabels.Woman.map(
-						(label, index) => (
-							<RadioBtn
-								className="hzntl-carousel-container__radio-grp__radio"
-								labelName={label}
-								noDots={true}
-								// dataOrder={index}
-								key={index}
-								checked={currentlyActiveSlideNoWOMAN === index}
-								onChange={onCustomRadioInputChange(
-									set_SettingActiveSlideNoWOMAN
-								)}
-							/>
-						)
-					)}
-				</RadioGroup>
-			</div>
-			<div className="hzntl-carousel-container hzntl-carousel-container--man-section">
-				<Carousel
-					{...verticalCarouselOptions}
-					CarouselDots={{
-						...verticalCarouselOptions.CarouselDots!,
-						label: verticalCarouselDotsWithLabels.Man,
-					}}
-					setActiveSlide={settingActiveSlideNoMAN}
-					executeOnActiveSlide={executeOnActiveSlide(
-						getCurrentlyActiveSlideNoMAN
-					)}
-				>
-					<Video
-						loop
-						dataDesktopMedSrc={require("../../Video/MAN_NEW_landscape-768px.mp4")}
-						dataDesktopLargeSrc={require("../../Video/MAN_NEW_landscape-1024px.mp4")}
-						dataPhonePortraitSrc={require("../../Video/MAN_NEW_portrait-phone.mp4")}
-						dataIpadPortraitSrc={require("../../Video/MAN_NEW_portrait-ipad.mp4")}
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_woman/new/WOMAN_NEW-portrait-fill-phone.jpg")}
 					/>
-					<Video
-						loop
-						dataDesktopMedSrc={require("../../Video/MAN_ZARA_ATHLETICZ_landscape-1200px.mp4")}
-						dataDesktopLargeSrc={require("../../Video/MAN_ZARA_ATHLETICZ_landscape-2400px.mp4")}
-						dataPhonePortraitSrc={require("../../Video/MAN_ZARA_ATHLETICZ_portrait-phone.mp4")}
-						dataIpadPortraitSrc={require("../../Video/MAN_ZARA_ATHLETICZ_portrait-ipad.mp4")}
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_woman/new/WOMAN_NEW-portrait-fill-ipad.jpg?as=webp")}
 					/>
-					{verticalCarouselLastSlide}
-				</Carousel>
-				<RadioGroup
-					className={
-						currentlyActiveSlideNoMAN ===
-						verticalCarouselDotsWithLabels.Man.length - 1
-							? "hzntl-carousel-container__radio-grp--hidden"
-							: "hzntl-carousel-container__radio-grp"
-					}
-					controlled={true}
-				>
-					{verticalCarouselDotsWithLabels.Man.map((label, index) => (
-						<RadioBtn
-							className="hzntl-carousel-container__radio-grp__radio"
-							labelName={label}
-							noDots={true}
-							// dataOrder={index}
-							checked={currentlyActiveSlideNoMAN === index}
-							key={index}
-							onChange={onCustomRadioInputChange(
-								set_SettingActiveSlideNoMAN
-							)}
-						/>
-					))}
-				</RadioGroup>
-			</div>
-			<div className="hzntl-carousel-container hzntl-carousel-container--kids-section">
-				<Carousel
-					{...verticalCarouselOptions}
-					CarouselDots={{
-						...verticalCarouselOptions.CarouselDots!,
-						label: verticalCarouselDotsWithLabels.Kids,
-					}}
-					setActiveSlide={settingActiveSlideNoKIDS}
-					executeOnActiveSlide={executeOnActiveSlide(
-						getCurrentlyActiveSlideNoKIDS
-					)}
-				>
-					<picture>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_woman/new/WOMAN_NEW-portrait-fill-ipad.jpg")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_woman/new/WOMAN_NEW-landscape-fill-1600.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_woman/new/WOMAN_NEW-landscape-fill-1600.jpg")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_woman/new/WOMAN_NEW-landscape-fill-2200.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_woman/new/WOMAN_NEW-landscape-fill-2200.jpg")}
+					/>
+					<source
+						media="(min-width: 2201px)"
+						srcSet={require("Assets/images/carousel_woman/new/WOMAN_NEW-landscape-fill-2400.jpg?as=webp")}
+					/>
+					<img
+						src={require("Assets/images/carousel_woman/new/WOMAN_NEW-landscape-fill-2400.jpg")}
+						alt="woman wearing a jacket and jeans looking towards the left"
+					/>
+				</picture>
+				<picture>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_woman/collection/WOMAN_COLLECTION-portrait-fill-phone.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_woman/collection/WOMAN_COLLECTION-portrait-fill-phone.jpg")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_woman/collection/WOMAN_COLLECTION-portrait-fill-ipad.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_woman/collection/WOMAN_COLLECTION-portrait-fill-ipad.jpg")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_woman/collection/WOMAN_COLLECTION-landscape-fill-1600.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_woman/collection/WOMAN_COLLECTION-landscape-fill-1600.jpg")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_woman/collection/WOMAN_COLLECTION-landscape-fill-2200.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_woman/collection/WOMAN_COLLECTION-landscape-fill-2200.jpg")}
+					/>
+					<source
+						media="(min-width: 2201px)"
+						srcSet={require("Assets/images/carousel_woman/collection/WOMAN_COLLECTION-landscape-fill-2400.jpg?as=webp")}
+					/>
+					<img
+						src={require("Assets/images/carousel_woman/collection/WOMAN_COLLECTION-landscape-fill-2400.jpg")}
+						alt="woman in black with a big smile on her face"
+					/>
+				</picture>
+				<picture>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_woman/jeans/WOMAN_JEANS-portrait-fill-phone.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_woman/jeans/WOMAN_JEANS-portrait-fill-phone.jpg")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_woman/jeans/WOMAN_JEANS-portrait-fill-ipad.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_woman/jeans/WOMAN_JEANS-portrait-fill-ipad.jpg")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_woman/jeans/WOMAN_JEANS-landscape-fill-1600.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_woman/jeans/WOMAN_JEANS-landscape-fill-1600.jpg")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_woman/jeans/WOMAN_JEANS-landscape-fill-2200.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_woman/jeans/WOMAN_JEANS-landscape-fill-2200.jpg")}
+					/>
+					<source
+						media="(min-width: 2201px)"
+						srcSet={require("Assets/images/carousel_woman/jeans/WOMAN_JEANS-landscape-fill-2400.jpg?as=webp")}
+					/>
+					<img
+						src={require("Assets/images/carousel_woman/jeans/WOMAN_JEANS-landscape-fill-2400.jpg")}
+						alt="woman in a t shirt and jeans looking towards the left"
+					/>
+				</picture>
+				<picture>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_woman/dresses/WOMAN_DRESSES-portrait-fill-phone.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_woman/dresses/WOMAN_DRESSES-portrait-fill-phone.jpg")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_woman/dresses/WOMAN_DRESSES-portrait-fill-ipad.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_woman/dresses/WOMAN_DRESSES-portrait-fill-ipad.jpg")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_woman/dresses/WOMAN_DRESSES-landscape-fill-1600.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_woman/dresses/WOMAN_DRESSES-landscape-fill-1600.jpg")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_woman/dresses/WOMAN_DRESSES-landscape-fill-2200.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_woman/dresses/WOMAN_DRESSES-landscape-fill-2200.jpg")}
+					/>
+					<source
+						media="(min-width: 2201px)"
+						srcSet={require("Assets/images/carousel_woman/dresses/WOMAN_DRESSES-landscape-fill-2400.jpg?as=webp")}
+					/>
+					<img
+						src={require("Assets/images/carousel_woman/dresses/WOMAN_DRESSES-landscape-fill-2400.jpg")}
+						alt="woman in a black dress and heels with her arms crossed"
+					/>
+				</picture>
+				<picture>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_woman/shoes/WOMAN_SHOES-portrait-fill-phone.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_woman/shoes/WOMAN_SHOES-portrait-fill-phone.jpg")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_woman/shoes/WOMAN_SHOES-portrait-fill-ipad.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_woman/shoes/WOMAN_SHOES-portrait-fill-ipad.jpg")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_woman/shoes/WOMAN_SHOES-landscape-fill-1600.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_woman/shoes/WOMAN_SHOES-landscape-fill-1600.jpg")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_woman/shoes/WOMAN_SHOES-landscape-fill-2200.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_woman/shoes/WOMAN_SHOES-landscape-fill-2200.jpg")}
+					/>
+					<source
+						media="(min-width: 2201px)"
+						srcSet={require("Assets/images/carousel_woman/shoes/WOMAN_SHOES-landscape-fill-2400.jpg?as=webp")}
+					/>
+					<img
+						src={require("Assets/images/carousel_woman/shoes/WOMAN_SHOES-landscape-fill-2400.jpg")}
+						alt="shoe (heel) with a denim fabric"
+					/>
+				</picture>
+				{verticalCarouselLastSlide}
+			</Carousel>
+			<Carousel
+				{...verticalCarouselOptions}
+				CarouselDots={{
+					...(verticalCarouselOptions.CarouselDots as CarouselDotsBaseType),
+					label: verticalCarouselDotsWithLabels.Man,
+				}}
+				setActiveSlide={activeSlideNoMAN}
+			>
+				<picture>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_man/new/MAN_NEW-portrait-fill-phone.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_man/new/MAN_NEW-portrait-fill-phone.jpg")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_man/new/MAN_NEW-portrait-fill-ipad.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_man/new/MAN_NEW-portrait-fill-ipad.jpg")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_man/new/MAN_NEW-landscape-fill-1600.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_man/new/MAN_NEW-landscape-fill-1600.jpg")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_man/new/MAN_NEW-landscape-fill-2200.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_man/new/MAN_NEW-landscape-fill-2200.jpg")}
+					/>
+					<source
+						media="(min-width: 2201px)"
+						srcSet={require("Assets/images/carousel_man/new/MAN_NEW-landscape-fill-2400.jpg?as=webp")}
+					/>
+					<img
+						src={require("Assets/images/carousel_man/new/MAN_NEW-landscape-fill-2400.jpg")}
+						alt="a man with orange hair wearing a hooded coat"
+					/>
+				</picture>
+				<div className="vert-carousel-container__img-container">
+					<picture className="vert-carousel-container__img-container__nested-img--grid-area-name">
 						<source
 							media="(max-width: 480px)"
-							srcSet={require("../../Images/Home_pg/KIDS/KIDS_BACK_TO_SCHOOL/KIDS_BACK_TO_SCHOOL_IMAGE-portrait-fill-phone.jpg")}
+							srcSet={require("Assets/images/carousel_man/utility/MAN_UTILITY-portrait-fill-phone.jpg?as=webp")}
 						/>
-						<source
-							media="(max-width: 768px) and (orientation: portrait)"
-							srcSet={require("../../Images/Home_pg/KIDS/KIDS_BACK_TO_SCHOOL/KIDS_BACK_TO_SCHOOL_IMAGE-portrait-ipad-fill.jpg")}
-						/>
-						<source
-							media="(max-width: 1024px)"
-							srcSet={require("../../Images/Home_pg/KIDS/KIDS_BACK_TO_SCHOOL/KIDS_BACK_TO_SCHOOL_IMAGE-landscape-fill-1024px.jpg")}
-						/>
-						<img
-							src={require("../../Images/Home_pg/KIDS/KIDS_BACK_TO_SCHOOL/KIDS_BACK_TO_SCHOOL_IMAGE-landscape-fill-2400px.jpg")}
-							alt="kids back to school"
-						/>
-					</picture>
-					<picture>
 						<source
 							media="(max-width: 480px)"
-							srcSet={require("../../Images/Home_pg/KIDS/KIDS_GIRL/KIDS_GIRL_IMAGE-portrait-fill-phone.jpg")}
+							srcSet={require("Assets/images/carousel_man/utility/MAN_UTILITY-portrait-fill-phone.jpg")}
 						/>
 						<source
-							media="(max-width: 768px) and (orientation: portrait)"
-							srcSet={require("../../Images/Home_pg/KIDS/KIDS_GIRL/KIDS_GIRL_IMAGE-portrait-ipad-fill.jpg")}
+							media="(max-width: 1024px) and (orientation: portrait)"
+							srcSet={require("Assets/images/carousel_man/utility/MAN_UTILITY-portrait-fill-ipad.jpg?as=webp")}
 						/>
 						<source
-							media="(max-width: 1024px)"
-							srcSet={require("../../Images/Home_pg/KIDS/KIDS_GIRL/KIDS_GIRL_IMAGE-landscape-fill-1024px.jpg")}
+							media="(max-width: 1024px) and (orientation: portrait)"
+							srcSet={require("Assets/images/carousel_man/utility/MAN_UTILITY-portrait-fill-ipad.jpg")}
+						/>
+						<source
+							media="(max-width: 1200px)"
+							srcSet={require("Assets/images/carousel_man/utility/MAN_UTILITY-landscape-fill-1600.jpg?as=webp")}
+						/>
+						<source
+							media="(max-width: 1200px)"
+							srcSet={require("Assets/images/carousel_man/utility/MAN_UTILITY-landscape-fill-1600.jpg")}
+						/>
+						<source
+							media="(max-width: 2200px)"
+							srcSet={require("Assets/images/carousel_man/utility/MAN_UTILITY-landscape-fill-2200.jpg?as=webp")}
+						/>
+						<source
+							media="(max-width: 2200px)"
+							srcSet={require("Assets/images/carousel_man/utility/MAN_UTILITY-landscape-fill-2200.jpg")}
+						/>
+						<source
+							media="(min-width: 2201px)"
+							srcSet={require("Assets/images/carousel_man/utility/MAN_UTILITY-landscape-fill-2400.jpg?as=webp")}
 						/>
 						<img
-							src={require("../../Images/Home_pg/KIDS/KIDS_GIRL/KIDS_GIRL_IMAGE-landscape-fill-2400px.jpg")}
-							alt="A young girl posing"
+							className="vert-carousel-container__img-container__nested-img"
+							src={require("Assets/images/carousel_man/utility/MAN_UTILITY-landscape-fill-2400.jpg")}
+							alt="a collage of men wearing different clothes"
 						/>
 					</picture>
-					<picture>
-						<source
-							media="(max-width: 480px)"
-							srcSet={require("../../Images/Home_pg/KIDS/KIDS_BABY_GIRL/KIDS_BABY_GIRL_IMAGE-portrait-fill-phone.jpg")}
-						/>
-						<source
-							media="(max-width: 768px) and (orientation: portrait)"
-							srcSet={require("../../Images/Home_pg/KIDS/KIDS_BABY_GIRL/KIDS_BABY_GIRL_IMAGE-portrait-fill-ipad.jpg")}
-						/>
-						<source
-							media="(max-width: 1024px)"
-							srcSet={require("../../Images/Home_pg/KIDS/KIDS_BABY_GIRL/KIDS_BABY_GIRL_IMAGE-landscape-fill-1200px.jpg")}
-						/>
-						<img
-							src={require("../../Images/Home_pg/KIDS/KIDS_BABY_GIRL/KIDS_BABY_GIRL_IMAGE-landscape-fill-2400px.jpg")}
-							alt="A baby girl posing"
-						/>
-					</picture>
-					<picture>
-						<source
-							media="(max-width: 480px)"
-							srcSet={require("../../Images/Home_pg/KIDS/KIDS_BABY_BOY/KIDS_BABY_BOY_IMAGE-portrait-fill-phone.jpg")}
-						/>
-						<source
-							media="(max-width: 768px) and (orientation: portrait)"
-							srcSet={require("../../Images/Home_pg/KIDS/KIDS_BABY_BOY/KIDS_BABY_BOY_IMAGE-portrait-ipad-fill.jpg")}
-						/>
-						<source
-							media="(max-width: 1024px)"
-							srcSet={require("../../Images/Home_pg/KIDS/KIDS_BABY_BOY/KIDS_BABY_BOY_IMAGE-landscape-fill-1200px.jpg")}
-						/>
-						<img
-							src={require("../../Images/Home_pg/KIDS/KIDS_BABY_BOY/KIDS_BABY_BOY_IMAGE-landscape-fill-2400px.jpg")}
-							alt="A baby girl posing"
-						/>
-					</picture>
-					<picture>
-						<source
-							media="(max-width: 480px)"
-							srcSet={require("../../Images/Home_pg/KIDS/KIDS_MINI/KIDS_MINI_IMAGE-portrait-fill-phone.jpg")}
-						/>
-						<source
-							media="(max-width: 768px) and (orientation: portrait)"
-							srcSet={require("../../Images/Home_pg/KIDS/KIDS_MINI/KIDS_MINI_IMAGE-portrait-ipad-fill.jpg")}
-						/>
-						<source
-							media="(max-width: 1024px)"
-							srcSet={require("../../Images/Home_pg/KIDS/KIDS_MINI/KIDS_MINI_IMAGE-landscape-fill-1024px.jpg")}
-						/>
-						<img
-							src={require("../../Images/Home_pg/KIDS/KIDS_MINI/KIDS_MINI_IMAGE-landscape-fill-2400px.jpg")}
-							alt="mother holding baby"
-						/>
-					</picture>
-					<picture>
-						<source
-							media="(max-width: 480px)"
-							srcSet={require("../../Images/Home_pg/KIDS/KIDS_ACCESSORIES/KIDS_ACCESSORIES_IMAGE-portrait-fill-phone.jpg")}
-						/>
-						<source
-							media="(max-width: 768px) and (orientation: portrait)"
-							srcSet={require("../../Images/Home_pg/KIDS/KIDS_ACCESSORIES/KIDS_ACCESSORIES_IMAGE-portrait-ipad-fill.jpg")}
-						/>
-						<source
-							media="(max-width: 1024px)"
-							srcSet={require("../../Images/Home_pg/KIDS/KIDS_ACCESSORIES/KIDS_ACCESSORIES_IMAGE-landscape-fill-1024px.jpg")}
-						/>
-						<img
-							src={require("../../Images/Home_pg/KIDS/KIDS_ACCESSORIES/KIDS_ACCESSORIES_IMAGE-landscape-fill-2400px.jpg")}
-							alt="young girl standing in front of a swimming pool"
-						/>
-					</picture>
-					<picture>
-						<source
-							media="(max-width: 480px)"
-							srcSet={require("../../Images/Home_pg/KIDS/KIDS_JOIN_LIFE/KIDS_JOIN_LIFE_IMAGE-portrait-fill-phone.jpg")}
-						/>
-						<source
-							media="(max-width: 768px) and (orientation: portrait)"
-							srcSet={require("../../Images/Home_pg/KIDS/KIDS_JOIN_LIFE/KIDS_JOIN_LIFE_IMAGE-portrait-ipad-fill.jpg")}
-						/>
-						<source
-							media="(max-width: 1024px)"
-							srcSet={require("../../Images/Home_pg/KIDS/KIDS_JOIN_LIFE/KIDS_JOIN_LIFE_IMAGE-landscape-fill-1024px.jpg")}
-						/>
-						<img
-							src={require("../../Images/Home_pg/KIDS/KIDS_JOIN_LIFE/KIDS_JOIN_LIFE_IMAGE-landscape-fill-2400px.jpg")}
-							alt="young girl wearing a kimono"
-						/>
-					</picture>
-					{verticalCarouselLastSlide}
-				</Carousel>
-				<RadioGroup
-					className={
-						currentlyActiveSlideNoKIDS ===
-						verticalCarouselDotsWithLabels.Kids.length - 1
-							? "hzntl-carousel-container__radio-grp--hidden"
-							: "hzntl-carousel-container__radio-grp"
-					}
-					controlled={true}
-				>
-					{verticalCarouselDotsWithLabels.Kids.map((label, index) => (
-						<RadioBtn
-							className="hzntl-carousel-container__radio-grp__radio"
-							labelName={label}
-							noDots={true}
-							// dataOrder={index}
-							checked={currentlyActiveSlideNoKIDS === index}
-							key={index}
-							onChange={onCustomRadioInputChange(
-								set_SettingActiveSlideNoKIDS
-							)}
-						/>
-					))}
-				</RadioGroup>
-			</div>
+					<img
+						className="vert-carousel-container__img-container__nested-img vert-carousel-container__img-container__nested-img--grid-area-name"
+						src={require("Assets/images/svgs/MAN_UTILITY-landscape-fill-svg.svg")}
+						alt="some text"
+					/>
+				</div>
+				<picture>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_man/athleticz/MAN_ATHLETICZ-portrait-fill-phone.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_man/athleticz/MAN_ATHLETICZ-portrait-fill-phone.jpg")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_man/athleticz/MAN_ATHLETICZ-portrait-fill-ipad.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_man/athleticz/MAN_ATHLETICZ-portrait-fill-ipad.jpg")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_man/athleticz/MAN_ATHLETICZ-landscape-fill-1600.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_man/athleticz/MAN_ATHLETICZ-landscape-fill-1600.jpg")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_man/athleticz/MAN_ATHLETICZ-landscape-fill-2200.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_man/athleticz/MAN_ATHLETICZ-landscape-fill-2200.jpg")}
+					/>
+					<source
+						media="(min-width: 2201px)"
+						srcSet={require("Assets/images/carousel_man/athleticz/MAN_ATHLETICZ-landscape-fill-2400.jpg?as=webp")}
+					/>
+					<img
+						src={require("Assets/images/carousel_man/athleticz/MAN_ATHLETICZ-landscape-fill-2400.jpg")}
+						alt="a group of people wearing active-wear, running up a mountain"
+					/>
+				</picture>
+				<picture>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_man/shoes/MAN_SHOES-portrait-fill-phone.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_man/shoes/MAN_SHOES-portrait-fill-phone.jpg")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_man/shoes/MAN_SHOES-portrait-fill-ipad.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_man/shoes/MAN_SHOES-portrait-fill-ipad.jpg")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_man/shoes/MAN_SHOES-landscape-fill-1600.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_man/shoes/MAN_SHOES-landscape-fill-1600.jpg")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_man/shoes/MAN_SHOES-landscape-fill-2200.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_man/shoes/MAN_SHOES-landscape-fill-2200.jpg")}
+					/>
+					<source
+						media="(min-width: 2201px)"
+						srcSet={require("Assets/images/carousel_man/shoes/MAN_SHOES-landscape-fill-2400.jpg?as=webp")}
+					/>
+					<img
+						src={require("Assets/images/carousel_man/shoes/MAN_SHOES-landscape-fill-2400.jpg")}
+						alt="a closeup of a mens shoe"
+					/>
+				</picture>
+				{verticalCarouselLastSlide}
+			</Carousel>
+			<Carousel
+				{...verticalCarouselOptions}
+				CarouselDots={{
+					...(verticalCarouselOptions.CarouselDots as CarouselDotsBaseType),
+					label: verticalCarouselDotsWithLabels.Kids,
+				}}
+				setActiveSlide={activeSlideNoKIDS}
+			>
+				{/* --------------------------------------- video ------------------------------------------------- */}
+				<Video
+					dataPhonePortraitSrc={require("Assets/videos/KIDS_NEWBABYSIZE-portrait-fill-phone.mp4")}
+					dataIpadPortraitSrc={require("Assets/videos/KIDS_NEWBABYSIZE-portrait-fill-ipad.mp4")}
+					dataDesktopMedSrc={require("Assets/videos/KIDS_NEWBABYSIZE-landscape-fill-med.mp4")}
+					dataDesktopLargeSrc={require("Assets/videos/KIDS_NEWBABYSIZE-landscape-fill-large.mp4")}
+					preload="auto"
+					loop={true}
+					seekToStartWhenNotVisible={true}
+					posterPortrait={require("Assets/videos/KIDS_NEWBABYSIZE-poster-portrait.jpg")}
+					posterLandscape={require("Assets/videos/KIDS_NEWBABYSIZE-poster-landscape.jpg")}
+				/>
+				<picture>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_kids/girl/KIDS_GIRL-portrait-fill-phone.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_kids/girl/KIDS_GIRL-portrait-fill-phone.jpg")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_kids/girl/KIDS_GIRL-portrait-fill-ipad.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_kids/girl/KIDS_GIRL-portrait-fill-ipad.jpg")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_kids/girl/KIDS_GIRL-landscape-fill-1400.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_kids/girl/KIDS_GIRL-landscape-fill-1400.jpg")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_kids/girl/KIDS_GIRL-landscape-fill-2200.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_kids/girl/KIDS_GIRL-landscape-fill-2200.jpg")}
+					/>
+					<source
+						media="(min-width: 2201px)"
+						srcSet={require("Assets/images/carousel_kids/girl/KIDS_GIRL-landscape-fill-2400.jpg?as=webp")}
+					/>
+					<img
+						src={require("Assets/images/carousel_kids/girl/KIDS_GIRL-landscape-fill-2400.jpg")}
+						alt="side profile of a girl in a white dress"
+					/>
+				</picture>
+				<picture>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_kids/boy/KIDS_BOY-portrait-fill-phone.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_kids/boy/KIDS_BOY-portrait-fill-phone.jpg")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_kids/boy/KIDS_BOY-portrait-fill-ipad.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_kids/boy/KIDS_BOY-portrait-fill-ipad.jpg")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_kids/boy/KIDS_BOY-landscape-fill-1400.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_kids/boy/KIDS_BOY-landscape-fill-1400.jpg")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_kids/boy/KIDS_BOY-landscape-fill-2200.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_kids/boy/KIDS_BOY-landscape-fill-2200.jpg")}
+					/>
+					<source
+						media="(min-width: 2201px)"
+						srcSet={require("Assets/images/carousel_kids/boy/KIDS_BOY-landscape-fill-2400.jpg?as=webp")}
+					/>
+					<img
+						src={require("Assets/images/carousel_kids/boy/KIDS_BOY-landscape-fill-2400.jpg")}
+						alt="2 boys with one boy leaning on a big ball and the other with his arms up and looking up"
+					/>
+				</picture>
+				<picture>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_kids/babygirl/KIDS_BABYGIRL-portrait-fill-phone.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_kids/babygirl/KIDS_BABYGIRL-portrait-fill-phone.jpg")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_kids/babygirl/KIDS_BABYGIRL-portrait-fill-ipad.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_kids/babygirl/KIDS_BABYGIRL-portrait-fill-ipad.jpg")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_kids/babygirl/KIDS_BABYGIRL-landscape-fill-1400.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_kids/babygirl/KIDS_BABYGIRL-landscape-fill-1400.jpg")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_kids/babygirl/KIDS_BABYGIRL-landscape-fill-2200.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_kids/babygirl/KIDS_BABYGIRL-landscape-fill-2200.jpg")}
+					/>
+					<source
+						media="(min-width: 2201px)"
+						srcSet={require("Assets/images/carousel_kids/babygirl/KIDS_BABYGIRL-landscape-fill-2400.jpg?as=webp")}
+					/>
+					<img
+						src={require("Assets/images/carousel_kids/babygirl/KIDS_BABYGIRL-landscape-fill-2400.jpg")}
+						alt="a girl wearing a white dress and crown"
+					/>
+				</picture>
+				<picture>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_kids/babyboy/KIDS_BABYBOY-portrait-fill-phone.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_kids/babyboy/KIDS_BABYBOY-portrait-fill-phone.jpg")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_kids/babyboy/KIDS_BABYBOY-portrait-fill-ipad.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_kids/babyboy/KIDS_BABYBOY-portrait-fill-ipad.jpg")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_kids/babyboy/KIDS_BABYBOY-landscape-fill-1400.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_kids/babyboy/KIDS_BABYBOY-landscape-fill-1400.jpg")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_kids/babyboy/KIDS_BABYBOY-landscape-fill-2200.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_kids/babyboy/KIDS_BABYBOY-landscape-fill-2200.jpg")}
+					/>
+					<source
+						media="(min-width: 2201px)"
+						srcSet={require("Assets/images/carousel_kids/babyboy/KIDS_BABYBOY-landscape-fill-2400.jpg?as=webp")}
+					/>
+					<img
+						src={require("Assets/images/carousel_kids/babyboy/KIDS_BABYBOY-landscape-fill-2400.jpg")}
+						alt="a closeup of a boy wearing a shirt and a cap"
+					/>
+				</picture>
+				<picture>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_kids/newborn/KIDS_NEWBORN-portrait-fill-phone.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_kids/newborn/KIDS_NEWBORN-portrait-fill-phone.jpg")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_kids/newborn/KIDS_NEWBORN-portrait-fill-ipad.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_kids/newborn/KIDS_NEWBORN-portrait-fill-ipad.jpg")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_kids/newborn/KIDS_NEWBORN-landscape-fill-1400.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_kids/newborn/KIDS_NEWBORN-landscape-fill-1400.jpg")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_kids/newborn/KIDS_NEWBORN-landscape-fill-2200.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_kids/newborn/KIDS_NEWBORN-landscape-fill-2200.jpg")}
+					/>
+					<source
+						media="(min-width: 2201px)"
+						srcSet={require("Assets/images/carousel_kids/newborn/KIDS_NEWBORN-landscape-fill-2400.jpg?as=webp")}
+					/>
+					<img
+						src={require("Assets/images/carousel_kids/newborn/KIDS_NEWBORN-landscape-fill-2400.jpg")}
+						alt="3 babies together"
+					/>
+				</picture>
+				<picture>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_kids/swimwear/KIDS_SWIMWEAR-portrait-fill-phone.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_kids/swimwear/KIDS_SWIMWEAR-portrait-fill-phone.jpg")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_kids/swimwear/KIDS_SWIMWEAR-portrait-fill-ipad.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_kids/swimwear/KIDS_SWIMWEAR-portrait-fill-ipad.jpg")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_kids/swimwear/KIDS_SWIMWEAR-landscape-fill-1400.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_kids/swimwear/KIDS_SWIMWEAR-landscape-fill-1400.jpg")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_kids/swimwear/KIDS_SWIMWEAR-landscape-fill-2200.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_kids/swimwear/KIDS_SWIMWEAR-landscape-fill-2200.jpg")}
+					/>
+					<source
+						media="(min-width: 2201px)"
+						srcSet={require("Assets/images/carousel_kids/swimwear/KIDS_SWIMWEAR-landscape-fill-2400.jpg?as=webp")}
+					/>
+					<img
+						src={require("Assets/images/carousel_kids/swimwear/KIDS_SWIMWEAR-landscape-fill-2400.jpg")}
+						alt="an aerial view of people in a pool"
+					/>
+				</picture>
+				<picture>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_kids/shoes/KIDS_SHOES-portrait-fill-phone.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 480px)"
+						srcSet={require("Assets/images/carousel_kids/shoes/KIDS_SHOES-portrait-fill-phone.jpg")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_kids/shoes/KIDS_SHOES-portrait-fill-ipad.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1024px) and (orientation: portrait)"
+						srcSet={require("Assets/images/carousel_kids/shoes/KIDS_SHOES-portrait-fill-ipad.jpg")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_kids/shoes/KIDS_SHOES-landscape-fill-1400.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 1200px)"
+						srcSet={require("Assets/images/carousel_kids/shoes/KIDS_SHOES-landscape-fill-1400.jpg")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_kids/shoes/KIDS_SHOES-landscape-fill-2200.jpg?as=webp")}
+					/>
+					<source
+						media="(max-width: 2200px)"
+						srcSet={require("Assets/images/carousel_kids/shoes/KIDS_SHOES-landscape-fill-2200.jpg")}
+					/>
+					<source
+						media="(min-width: 2201px)"
+						srcSet={require("Assets/images/carousel_kids/shoes/KIDS_SHOES-landscape-fill-2400.jpg?as=webp")}
+					/>
+					<img
+						src={require("Assets/images/carousel_kids/shoes/KIDS_SHOES-landscape-fill-2400.jpg")}
+						alt="a kids sandal on a pedestal"
+					/>
+				</picture>
+				{verticalCarouselLastSlide}
+			</Carousel>
 		</Carousel>
 	);
 };

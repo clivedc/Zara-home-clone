@@ -1,4 +1,4 @@
-import React from "react";
+// import React from "react";
 
 export const convertSuperscript = (item: string): React.ReactNode => {
 	if (item.match(/(\snew)$/gi)) {

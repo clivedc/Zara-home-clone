@@ -2,23 +2,31 @@ import React, { useEffect, useRef, useState } from "react";
 import useIntersectionObserver from "../../Hooks/useIntersectionObserver";
 import styles from "./Video.module.css";
 
-interface VideoProps extends React.ComponentPropsWithoutRef<"video"> {
-	dataDesktopSmallSrc?: string;
+export interface VideoPropsType
+	extends React.ComponentPropsWithoutRef<"video"> {
+	// dataDesktopSmallSrc?: string;
 	dataDesktopMedSrc?: string;
 	dataDesktopLargeSrc: string;
 	dataPhonePortraitSrc?: string;
 	dataIpadPortraitSrc: string;
+	posterPortrait: string;
+	posterLandscape: string;
+	classNameForContainer?: string;
+	seekToStartWhenNotVisible?: boolean;
 }
 
 const Video = ({
-	dataDesktopSmallSrc,
 	dataDesktopMedSrc,
 	dataDesktopLargeSrc,
 	dataPhonePortraitSrc,
 	dataIpadPortraitSrc,
+	posterPortrait,
+	posterLandscape,
+	seekToStartWhenNotVisible = false,
 	className,
+	classNameForContainer,
 	...restProps
-}: VideoProps) => {
+}: VideoPropsType) => {
 	// function immediateMediaState(mediaQuery:string) {
 	// 	window.matchMedia(mediaQuery).matches
 	// }
@@ -42,6 +50,9 @@ const Video = ({
 	const [mediaQuery_2400PX, setMediaQuery_2400PX] = useState(
 		window.matchMedia("(min-width: 2400px)").matches
 	);
+	const [mediaQuery_Portrait, setMediaQuery_Portrait] = useState(
+		window.matchMedia("(orientation: portrait)").matches
+	);
 	const sourceRef = useRef<HTMLSourceElement>(null);
 	// const videoRef = useRef<HTMLVideoElement>(null);
 	const [isVideoVisible, videoRef] =
@@ -49,6 +60,18 @@ const Video = ({
 
 	useEffect(() => {
 		if (!sourceRef.current) return;
+
+		// orientation portrait
+		const setMediaOrientation = (e: MediaQueryListEvent) => {
+			if (e.matches) {
+				setMediaQuery_Portrait(true);
+			} else {
+				setMediaQuery_Portrait(false);
+			}
+		};
+		window
+			.matchMedia("(orientation: portrait)")
+			.addEventListener("change", setMediaOrientation);
 
 		// < 767px
 		const setMediaPhone = (e: MediaQueryListEvent) => {
@@ -114,12 +137,6 @@ const Video = ({
 		};
 	}, []);
 
-	// useEffect(() => {
-	// 	console.log(mediaQuery_768PX);
-	// 	console.log(window.innerWidth);
-	// 	console.log(window.innerHeight);
-	// }, [mediaQuery_768PX]);
-
 	//max-width: 767px
 	useEffect(() => {
 		if (!mediaQuery_767PX) return;
@@ -168,6 +185,18 @@ const Video = ({
 		videoRef.current.load();
 	}, [dataDesktopLargeSrc, mediaQuery_2400PX, videoRef]);
 
+	// set poster image based on orientation of device
+	useEffect(() => {
+		if (!videoRef.current) return;
+
+		const video = videoRef.current as HTMLVideoElement;
+		if (mediaQuery_Portrait) {
+			video.poster = posterPortrait;
+		} else {
+			video.poster = posterLandscape;
+		}
+	}, [mediaQuery_Portrait, posterLandscape, posterPortrait, videoRef]);
+
 	//play when in viewport and pause it
 	//when out of view
 	useEffect(() => {
@@ -179,8 +208,11 @@ const Video = ({
 			videoRef.current.play();
 		} else {
 			videoRef.current.pause();
+			if (seekToStartWhenNotVisible) {
+				videoRef.current.currentTime = 0;
+			}
 		}
-	}, [isVideoVisible, videoRef]);
+	}, [isVideoVisible, seekToStartWhenNotVisible, videoRef]);
 
 	//check if user has switched tabs or
 	//has opened another window
@@ -190,27 +222,40 @@ const Video = ({
 
 		const video = videoRef.current;
 
-		const handleVisibilityChange = (e: Event) => {
+		const handleVisibilityChange = () => {
 			if (document.visibilityState === "hidden" && !video.paused) {
 				video.pause();
+			} else {
+				// videoRef.current.muted = true;
+				if (video.paused && isVideoVisible) {
+					video.play();
+				}
 			}
-			//  else {
-			// 	// videoRef.current.muted = true;
-			// 	if (video.paused && isVideoVisible) {
-			// 		video.play();
-			// 	}
-			// }
 		};
 		document.addEventListener("visibilitychange", handleVisibilityChange);
-	}, [videoRef]);
+	}, [isVideoVisible, videoRef]);
 
 	return (
-		<div className={styles["Video-wrapper"]}>
+		<div
+			className={
+				classNameForContainer
+					? `${classNameForContainer} ${styles["Video-wrapper"]}`
+					: styles["Video-wrapper"]
+			}
+		>
 			<video className={classes} {...restProps} ref={videoRef} muted>
 				<source ref={sourceRef}></source>
 			</video>
 		</div>
 	);
 };
+
+// assign a name to the function
+// to be used by the carousel component
+Object.defineProperty(Video, "name", {
+	value: "Video",
+	writable: true,
+	configurable: true,
+});
 
 export default Video;

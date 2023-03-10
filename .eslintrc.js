@@ -28,5 +28,6 @@ module.exports = {
 		"@typescript-eslint/no-var-requires": "off",
 		"prefer-const": "off",
 		"no-mixed-spaces-and-tabs": "off",
+		"no-inner-declarations": "off",
 	},
 };

@@ -48,9 +48,8 @@ const RadioGroup = forwardRef<HTMLDivElement, RadioGroupPropsType>(
 		//set container styles
 		const setContainerStyles = () => {
 			const defaultStyle: React.CSSProperties = {
-				width: "max-content",
 				display: "flex",
-				gap: "0.7rem",
+				gap: "1rem",
 			};
 			if (style) {
 				return { ...defaultStyle, ...style };
@@ -103,18 +102,6 @@ const RadioGroup = forwardRef<HTMLDivElement, RadioGroupPropsType>(
 						`child at index '${index}' of children is not a valid React Element`
 					);
 				}
-
-				// if (
-				// 	child.type !== "input" &&
-				// 	!(
-				// 		typeof child.type === "object" &&
-				// 		(child.type as any).type.render.name === "RadioBtn"
-				// 	)
-				// ) {
-				// 	throw new Error(
-				// 		`Children must be of type radio or the RadioBtn component.\nChild at index '${index}' of children does not match this condition.`
-				// 	);
-				// }
 
 				if (
 					(child as React.ReactElement).props.checked !== undefined &&

@@ -11,7 +11,7 @@
 	height: 100%;
 }
 
-@media (orientation: landscape) {
+@media (orientation: landscape) and (min-width: 2300px) {
 	.Video {
 		object-fit: contain;
 		width: initial;

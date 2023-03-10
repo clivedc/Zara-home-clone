@@ -16,10 +16,24 @@ module.exports = {
 		ignored: [path.resolve(__dirname, "node_modules")],
 	},
 	resolve: {
-		extensions: [".tsx", ".ts", "..."],
+		extensions: [".tsx", ".ts", ".jpg", "..."],
+		alias: {
+			Assets: path.resolve(__dirname, "../assets"),
+		},
 	},
 	module: {
 		rules: [
+			{
+				test: /\.tsx?$/i,
+				loader: "esbuild-loader",
+				exclude: /node_modules/,
+				options: {
+					loader: "tsx",
+					target: "es6",
+					// tsconfig: ".configs/tsconfig.json",
+				},
+			},
+
 			{
 				test: /\.css$/i,
 				use: [
@@ -35,16 +49,23 @@ module.exports = {
 				include: /\.module\.css$/i,
 			},
 			{
-				test: /\.jpe?g$/i,
-				type: "asset/resource",
-				generator: {
-					filename: "assets/images/[name][ext]",
-				},
-			},
-			{
 				test: /\.css$/i,
 				use: [miniCssExtractPlugin.loader, "css-loader"],
 				exclude: /\.module\.css$/i,
+			},
+			{
+				test: /\.(jpg|svg)$/i,
+				type: "asset/resource",
+				generator: {
+					filename: "resources/images/[name][ext]",
+				},
+			},
+			{
+				test: /\.mp4$/i,
+				type: "asset/resource",
+				generator: {
+					filename: "resources/videos/[name][ext]",
+				},
 			},
 		],
 	},
@@ -60,12 +81,21 @@ module.exports = {
 	],
 	optimization: {
 		minimizer: [
-			"...",
 			new ImageMinimizerPlugin({
+				minimizer: {
+					implementation: ImageMinimizerPlugin.sharpMinify,
+					options: {
+						encodeOptions: {
+							jpeg: {
+								quality: 75,
+							},
+						},
+					},
+				},
 				generator: [
 					{
 						preset: "webp",
-						filename: "assets/images/[name][ext]",
+						filename: "resources/images/[name]][ext]",
 						implementation: ImageMinimizerPlugin.sharpGenerate,
 						options: {
 							encodeOptions: {

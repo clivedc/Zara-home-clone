@@ -13,6 +13,7 @@
 
 .label-name {
 	text-transform: uppercase;
+	font-size: var(--root-font-size-4);
 }
 
 .radio::before,
@@ -35,5 +36,5 @@
 }
 
 .radio:checked + .label-name {
-	font-weight: 800;
+	font-weight: 900;
 }
