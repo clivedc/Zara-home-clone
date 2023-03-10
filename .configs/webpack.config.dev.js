@@ -13,20 +13,6 @@ const devConfig = {
 		open: true,
 		hot: true,
 	},
-	module: {
-		rules: [
-			{
-				test: /\.tsx?$/i,
-				loader: "esbuild-loader",
-				exclude: /node_modules/,
-				options: {
-					loader: "tsx",
-					target: "es6",
-					tsconfig: ".configs/tsconfig.json",
-				},
-			},
-		],
-	},
 };
 
 module.exports = mergeWithRules({

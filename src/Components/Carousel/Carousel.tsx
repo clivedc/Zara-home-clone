@@ -12,32 +12,37 @@ import CssStyles from "./Carousel.module.css";
 import RadioGroup from "../RadioBtn/RadioGroup";
 import RadioBtn from "../RadioBtn/RadioBtn";
 import useIntersectionObserver from "../../Hooks/useIntersectionObserver";
+import usePrevious from "../../Hooks/usePrevious";
+import { VideoPropsType } from "../Video Component/Video";
 
 //types--------------------------------------------------------------
+type VerticalAlignment = "top" | "bottom";
+type HorizontalAlignment = "left" | "right";
+type VerticalOrHorizontal = "vertical" | "horizontal";
 export type CarouselDotsContainerPositionType =
-	| "top-left-vertical"
-	| "top-left-horizontal"
-	| "top-centre"
-	| "top-right-horizontal"
-	| "top-right-vertical"
-	| "bottom-left-vertical"
-	| "bottom-left-horizontal"
-	| "bottom-centre"
-	| "bottom-right-horizontal"
-	| "bottom-right-vertical";
+	| `${VerticalAlignment}-${HorizontalAlignment}-${VerticalOrHorizontal}`
+	| `${VerticalAlignment}-centre`;
+
+export type CarouselDotsBaseType =
+	| {
+			isTrue: true;
+			CarouselDotsContainerPosition: CarouselDotsContainerPositionType;
+	  }
+	| {
+			isTrue: false;
+			CarouselDotsContainerPosition?: never;
+	  };
 
 export interface CarouselOptionsType {
-	CarouselContainerStyles?: React.CSSProperties; //different from slides container
+	CarouselContainerStyles?: React.CSSProperties; //container of the slides track, different from slidesContainer
 	CarouselArrows?: {
 		isTrue: boolean;
 		label?: string[];
 	};
-	CarouselDots?: {
-		isTrue: boolean;
-		CarouselDotsContainerPosition?: CarouselDotsContainerPositionType;
-		CarouselDotsContainerStyles?: React.CSSProperties;
+	CarouselDots?: CarouselDotsBaseType & {
 		AutoHideAfterTransition?: boolean;
 		// CarouselDotsElement?: typeof RadioGroup;
+		CarouselDotsAdditionalStyles?: React.CSSProperties;
 		label?: string[];
 	};
 	AnimateOnWheelEvent?: boolean;
@@ -49,21 +54,22 @@ export interface CarouselOptionsType {
 		TimingFunction?: string;
 		AnimationDuration: number;
 		AnimationDelay?: number;
+		AnimationType?: "standard" | "stack";
 	};
 	AutoSlideChange?: {
 		isTrue: boolean;
 		timer: number;
+		waitUntilVideoHasFinishedPlayingToMoveToNextSlide?: boolean;
 		// isPaused?: boolean;
 	};
 	setActiveSlide?: number;
 	executeOnActiveSlide?: (ActiveSlide: number) => void;
 }
 
+type child = React.ReactElement<React.HTMLAttributes<HTMLOrSVGElement>>;
 interface CarouselPropsType extends CarouselOptionsType {
-	children:
-		| React.ReactElement<any, string | React.JSXElementConstructor<any>>
-		| React.ReactFragment
-		| React.ReactPortal;
+	children: child | child[];
+	// Exclude<React.ReactNode, primitives>;
 }
 
 //component----------------------------------------------------------------
@@ -72,7 +78,11 @@ function Carousel({
 	CarouselArrows = {
 		isTrue: true,
 	},
-	CarouselDots = { isTrue: true, AutoHideAfterTransition: false },
+	CarouselDots = {
+		isTrue: true,
+		AutoHideAfterTransition: false,
+		CarouselDotsContainerPosition: "bottom-centre",
+	},
 	AnimateOnWheelEvent = false,
 	isVertical = false,
 	isInfiniteLoop = true,
@@ -123,6 +133,14 @@ function Carousel({
 		const styleObj: React.CSSProperties = {
 			"--grid-items-in-view": NoOfSlidesInView,
 			"--grid-gap": GapBetweenSlides,
+			"--grid-area-name-for-children":
+				AnimationOptions?.AnimationType === "stack"
+					? "slide"
+					: "initial",
+			gridTemplateAreas:
+				AnimationOptions?.AnimationType === "stack"
+					? "'slide'"
+					: "initial",
 		} as React.CSSProperties;
 
 		//setting up Carousel direction
@@ -146,151 +164,115 @@ function Carousel({
 	const setCarouselDotsContainerStyles = () => {
 		if (!CarouselDots.isTrue) {
 			return {};
-		} else if (CarouselDots.CarouselDotsContainerPosition) {
-			let stylesObj: {
-				[index: string]: string | { [index: string]: string };
-			} = {
-				top: "initial",
-				right: "initial",
-				bottom: "initial",
-				left: "initial",
-				transformOrigin: "initial",
-				transform: "initial",
-			};
+		}
 
-			switch (CarouselDots.CarouselDotsContainerPosition) {
-				case "top-left-vertical": {
-					stylesObj = {
-						...stylesObj,
-						top: "0",
-						left: "0",
-						transformOrigin: "left center",
-						transform: "rotateZ(90deg)",
-						marginBlock: "7.5rem",
-					};
-					break;
-				}
-				case "top-left-horizontal": {
-					stylesObj = {
-						...stylesObj,
-						top: "0",
-						left: "0",
-					};
-					break;
-				}
-				case "top-centre": {
-					stylesObj = {
-						...stylesObj,
-						top: "0",
-						left: "50%",
-						transform: "translateX(-50%)",
-					};
-					break;
-				}
-				case "top-right-horizontal": {
-					stylesObj = {
-						...stylesObj,
-						top: "0",
-						right: "0",
-					};
-					break;
-				}
-				case "top-right-vertical": {
-					stylesObj = {
-						...stylesObj,
-						top: "0",
-						right: "0",
-						transformOrigin: "right center",
-						transform: "rotateZ(-90deg)",
-						marginBlock: "7.5rem",
-					};
-					break;
-				}
-				case "bottom-left-vertical": {
-					stylesObj = {
-						...stylesObj,
-						bottom: "0",
-						left: "0",
-						transformOrigin: "left center",
-						transform: "rotateZ(-90deg)",
-						marginBlock: "7.5rem",
-					};
-					break;
-				}
-				case "bottom-left-horizontal": {
-					stylesObj = {
-						...stylesObj,
-						bottom: "0",
-						left: "0",
-					};
-					break;
-				}
-				case "bottom-centre": {
-					stylesObj = {
-						...stylesObj,
-						bottom: "0",
-						left: "50%",
-						transform: "translateX(-50%)",
-					};
-					break;
-				}
-				case "bottom-right-horizontal": {
-					stylesObj = {
-						...stylesObj,
-						bottom: "0",
-						right: "0",
-					};
-					break;
-				}
-				case "bottom-right-vertical": {
-					stylesObj = {
-						...stylesObj,
-						transformOrigin: "right center",
-						transform: "rotateZ(90deg)",
-						bottom: "0",
-						right: "0",
-						marginBlock: "7.5rem",
-					};
-					break;
-				}
+		let stylesObj: React.CSSProperties = {
+			top: "initial",
+			right: "initial",
+			bottom: "initial",
+			left: "initial",
+			transformOrigin: "initial",
+			transform: "initial",
+		};
 
-				default:
-					throw new Error(
-						"Invalid parameter value: " +
-							CarouselDots.CarouselDotsContainerPosition
-					);
-				// break;
+		switch (CarouselDots.CarouselDotsContainerPosition) {
+			case "top-left-vertical": {
+				stylesObj = {
+					...stylesObj,
+					top: "0",
+					left: "0",
+					flexDirection: "column",
+				};
+				break;
+			}
+			case "top-left-horizontal": {
+				stylesObj = {
+					...stylesObj,
+					top: "0",
+					left: "0",
+				};
+				break;
+			}
+			case "top-centre": {
+				stylesObj = {
+					...stylesObj,
+					top: "0",
+					left: "50%",
+					transform: "translateX(-50%)",
+				};
+				break;
+			}
+			case "top-right-horizontal": {
+				stylesObj = {
+					...stylesObj,
+					top: "0",
+					right: "0",
+				};
+				break;
+			}
+			case "top-right-vertical": {
+				stylesObj = {
+					...stylesObj,
+					top: "0",
+					right: "0",
+					flexDirection: "column",
+					alignItems: "end",
+				};
+				break;
+			}
+			case "bottom-left-vertical": {
+				stylesObj = {
+					...stylesObj,
+					bottom: "0",
+					left: "0",
+					flexDirection: "column",
+				};
+				break;
+			}
+			case "bottom-left-horizontal": {
+				stylesObj = {
+					...stylesObj,
+					bottom: "0",
+					left: "0",
+				};
+				break;
+			}
+			case "bottom-centre": {
+				stylesObj = {
+					...stylesObj,
+					bottom: "0",
+					left: "50%",
+					transform: "translateX(-50%)",
+				};
+				break;
+			}
+			case "bottom-right-horizontal": {
+				stylesObj = {
+					...stylesObj,
+					bottom: "0",
+					right: "0",
+				};
+				break;
+			}
+			case "bottom-right-vertical": {
+				stylesObj = {
+					...stylesObj,
+					bottom: "0",
+					right: "0",
+					flexDirection: "column",
+					paddingBottom: "4rem",
+					alignItems: "end",
+				};
+				break;
 			}
 
-			return stylesObj;
-		} else if (CarouselDots.CarouselDotsContainerStyles) {
-			return CarouselDots.CarouselDotsContainerStyles;
+			default:
+				throw new Error("Unexpected parameter value.");
 		}
 
-		return {};
-	};
-
-	//configure Carousel Dots
-	//Label styles if labels are defined
-	const setCarouselDotsLabelStyles = () => {
-		if (
-			CarouselDots.CarouselDotsContainerPosition ===
-			"bottom-left-vertical"
-		) {
-			return {
-				order: "1",
-				transform: "rotateZ(180deg)",
-			};
-		} else if (
-			CarouselDots.CarouselDotsContainerPosition ===
-			"bottom-right-vertical"
-		) {
-			return {
-				transform: "rotateZ(180deg)",
-			};
-		}
-
-		return {};
+		return CarouselDots.CarouselDotsAdditionalStyles
+			? { ...stylesObj, ...CarouselDots.CarouselDotsAdditionalStyles }
+			: stylesObj;
 	};
 
 	function settingAnimationOptions() {
@@ -324,21 +306,14 @@ function Carousel({
 		Animation | undefined
 	>();
 	const carouselAnimationOptions = useRef(settingAnimationOptions());
-	// const [
-	// 	transitionSlidesOnPointerMoveAnimation,
-	// 	setTransitionSlidesOnPointerMoveAnimation,
-	// ] = useState<Animation | undefined>();
 	const [isSlidesContainerVisible, CarouselContainerRef] =
 		useIntersectionObserver<HTMLElement>({ threshold: 0.7 });
-	const CarouselDotsRadioGroupRef = useRef<HTMLDivElement>(null);
 	const CarouselDotsContainerRef = useRef<HTMLDivElement>(null);
 	const [CarouselDotsContainerStyles] = useState<React.CSSProperties>(
 		setCarouselDotsContainerStyles
 	);
-	const [CarouselDotsLabelStyles] = useState<React.CSSProperties>(
-		setCarouselDotsLabelStyles
-	);
 	const [slideNo, setSlideNo] = useState<number>(0);
+	const prevSlideNo = usePrevious(slideNo);
 	const gapBetweenSlidesInPixels = useRef<number>(0);
 	const [autoSlideChangeIsPaused, setAutoSlideChangeIsPaused] = useState<
 		boolean | null
@@ -346,9 +321,6 @@ function Carousel({
 		if (AutoSlideChange.isTrue && isInfiniteLoop) return false;
 		return true;
 	});
-	const [mediaQuery, setMediaQuery] = useState<boolean>(
-		window.matchMedia("(min-width: 768px)").matches
-	);
 
 	//---------------------------------------------------------------------
 
@@ -367,10 +339,22 @@ function Carousel({
 					//if child is a picture tag
 					//then map through its children and
 					//add styles to img element child
-					if (child.type === "picture" || child.type === "a") {
+					if (
+						child.type === "picture" ||
+						(child.type === "a" &&
+							child.props.children !== undefined)
+					) {
+						let existingClassNames: string;
+						child.props.className
+							? (existingClassNames = child.props.className)
+							: (existingClassNames = "");
 						const grandchildren = React.Children.map(
-							child.props.children,
-							(grandChild, index) => {
+							child.props.children as React.ReactElement<
+								React.HTMLAttributes<
+									HTMLSourceElement | HTMLImageElement
+								>
+							>,
+							(grandChild) => {
 								//if child of picture element is
 								//an img tag then add styles
 								if (grandChild.type === "img") {
@@ -398,7 +382,11 @@ function Carousel({
 						// new children
 						return React.cloneElement(
 							child,
-							undefined,
+							{
+								className: existingClassNames
+									? `${existingClassNames} ${CssStyles["slide-media-picture-tag"]}`
+									: CssStyles["slide-media-picture-tag"],
+							},
 							grandchildren
 						);
 						//if child is an img
@@ -412,7 +400,7 @@ function Carousel({
 								? `${existingClasses} ${CssStyles["slide-media-img"]}`
 								: CssStyles["slide-media-img"],
 							draggable: "false",
-						} as ComponentProps<"image">);
+						});
 						//if child is a video
 						//element then add video specific styles
 					} else if (
@@ -420,14 +408,41 @@ function Carousel({
 						(typeof child.type === "function" &&
 							child.type.name === "Video")
 					) {
+						const loop = (
+							child as React.ReactElement<ComponentProps<"video">>
+						).props.loop;
+						function executeOnVideoPlaybackEnd(
+							e: React.SyntheticEvent
+						) {
+							(e.currentTarget as HTMLVideoElement).play();
+						}
+
+						const commonProps = {
+							draggable: "false",
+							loop: false,
+							onEnded: loop ? executeOnVideoPlaybackEnd : null,
+						} as ComponentProps<"video">;
 						//if classes exist then include them
 						//else don't include classes
+						if (
+							typeof child.type === "function" &&
+							child.type.name === "Video"
+						) {
+							return React.cloneElement(child, {
+								...commonProps,
+								classNameForContainer:
+									CssStyles[
+										"slide-media-Video-component-container"
+									],
+							} as VideoPropsType);
+						}
+
 						return React.cloneElement(child, {
 							// "data-carousel-optimized": true,
+							...commonProps,
 							className: existingClasses
 								? `${existingClasses} ${CssStyles["slide-media-video"]}`
 								: CssStyles["slide-media-video"],
-							draggable: "false",
 						} as ComponentProps<"video">);
 					} else {
 						//else add generic slide styles
@@ -439,7 +454,7 @@ function Carousel({
 								? `${existingClasses} ${CssStyles.slide}`
 								: CssStyles.slide,
 							draggable: "false",
-						} as React.HTMLAttributes<HTMLElement>);
+						});
 					}
 				} else {
 					throw new Error(
@@ -456,23 +471,32 @@ function Carousel({
 		(slideNo: number) => {
 			if (
 				!transitionSlidesOnChangingSlideNoAnimation ||
-				!slidesContainerRef.current
+				!slidesContainerRef.current ||
+				prevSlideNo.current === -1
 			)
 				return;
 
 			const slidesContainer = slidesContainerRef.current;
-			const slideDimensions =
-				slidesContainer.firstElementChild!.getBoundingClientRect();
+			const slideDimensions = (
+				slidesContainer.firstElementChild as HTMLElement
+			).getBoundingClientRect();
 			//if isVertical --> slideHeight else slideWidth
 			let slideWidthOrHeight: number;
 			isVertical
 				? (slideWidthOrHeight = slideDimensions.height)
 				: (slideWidthOrHeight = slideDimensions.width);
 
+			const stackAnimationTrue =
+				AnimationOptions?.AnimationType === "stack";
 			// const transformBy = 100 * slideNo; //percentage
-			const transformBy =
-				(slideWidthOrHeight + gapBetweenSlidesInPixels.current) *
-				slideNo;
+			let transformBy: number;
+			if (stackAnimationTrue) {
+				transformBy = 100 * slideNo; // percentage
+			} else {
+				transformBy =
+					(slideWidthOrHeight + gapBetweenSlidesInPixels.current) *
+					slideNo;
+			}
 
 			const timingOptions = {
 				...carouselAnimationOptions.current,
@@ -481,9 +505,10 @@ function Carousel({
 
 			//get previously translated value and store it in a matrix
 			//transformX value = matrix.e, transformY value = matrix.f
-			const matrix = new DOMMatrix(
-				getComputedStyle(slidesContainer).transform
-			);
+			// let matrix = new DOMMatrix(
+			// 	getComputedStyle(slidesContainer).transform
+			// );
+			let matrix: DOMMatrix;
 
 			//setting up carousel dots animation if specified
 			let carouselDotsContainerAnimation: null | Animation = null;
@@ -508,57 +533,149 @@ function Carousel({
 			if (carouselDotsContainerAnimation)
 				carouselDotsContainerAnimation.pause();
 
-			if (isVertical) {
-				transitionSlidesOnChangingSlideNoAnimation.current =
-					slidesContainer.animate(
+			// if AnimationOptions.AnimationType === "stack"
+			if (stackAnimationTrue) {
+				const slides = Array.from(
+					slidesContainer.children
+				) as HTMLElement[];
+				const prevSlideNum = prevSlideNo.current;
+
+				if (prevSlideNum < slideNo) {
+					const slideToAnimate =
+						slides[slideNo].tagName.toLowerCase() === "picture"
+							? (slides[slideNo].querySelector(
+									"img"
+							  ) as HTMLElement)
+							: slides[slideNo];
+					// read current transform values
+					matrix = new DOMMatrix(
+						getComputedStyle(slideToAnimate).transform
+					);
+
+					const anim = slideToAnimate.animate(
 						{
-							transform: [
-								`translate(${matrix.e}px,${matrix.f}px)`,
-								`translate(0,-${transformBy}px)`,
-							],
+							transform: isVertical
+								? [`translateY(${matrix.f}px)`, "translateY(0)"]
+								: [
+										`translateX(${matrix.e}px)`,
+										"translateX(0)",
+								  ],
 						},
 						timingOptions
 					);
 
-				//commit styles of last frame and remove animation (cancel method)
-				//on finish to prevent racking up unnecessary animation instances
-				transitionSlidesOnChangingSlideNoAnimation.current.onfinish =
-					function onAnimationEnd() {
-						transitionSlidesOnChangingSlideNoAnimation.current?.commitStyles();
-						transitionSlidesOnChangingSlideNoAnimation.current?.cancel();
+					const diffInSlideNos = slideNo - prevSlideNum;
+
+					anim.onfinish = function onAnimFin() {
+						// shift all intermediate slides
+						if (diffInSlideNos > 1) {
+							let slide: HTMLElement;
+							for (let i = prevSlideNum + 1; i < slideNo; i++) {
+								slide =
+									slides[i].tagName.toLowerCase() ===
+									"picture"
+										? (slides[i].querySelector(
+												"img"
+										  ) as HTMLElement)
+										: slides[i];
+								slide.style.transform = isVertical
+									? "translateY(0%)"
+									: "translateX(0%)";
+							}
+						}
+
+						// clear animation instance
+						anim.commitStyles();
+						anim.cancel();
 					};
+					// else if prevSlideNo > slideNo
+				} else {
+					const slideToAnimate =
+						slides[prevSlideNum].tagName.toLowerCase() === "picture"
+							? (slides[prevSlideNum].querySelector(
+									"img"
+							  ) as HTMLElement)
+							: slides[prevSlideNum];
+					// read current transform values
+					matrix = new DOMMatrix(
+						getComputedStyle(slideToAnimate).transform
+					);
 
-				if (!carouselDotsContainerAnimation) {
-					return;
+					const diffInSlideNos = prevSlideNum - slideNo;
+
+					// shift all intermediate slides before performing animation
+					if (diffInSlideNos > 1) {
+						let slide: HTMLElement;
+						for (let i = slideNo + 1; i < prevSlideNum; i++) {
+							slide =
+								slides[i].tagName.toLowerCase() === "picture"
+									? (slides[i].querySelector(
+											"img"
+									  ) as HTMLElement)
+									: slides[i];
+							slide.style.transform = isVertical
+								? "translateY(100%)"
+								: "translateX(100%)";
+						}
+					}
+
+					transitionSlidesOnChangingSlideNoAnimation.current =
+						slideToAnimate.animate(
+							{
+								transform: isVertical
+									? [
+											`translateY(${matrix.f}px)`,
+											"translateY(100%)",
+									  ]
+									: [
+											`translateX(${matrix.e}px)`,
+											"translateX(100%)",
+									  ],
+							},
+							timingOptions
+						);
 				}
-
-				carouselDotsContainerAnimation.play();
 			} else {
+				matrix = new DOMMatrix(
+					getComputedStyle(slidesContainer).transform
+				);
 				transitionSlidesOnChangingSlideNoAnimation.current =
 					slidesContainer.animate(
 						{
-							transform: [
-								`translate(${matrix.e}px,${matrix.f}px)`,
-								`translate(-${transformBy}px,0)`,
-							],
+							transform: isVertical
+								? [
+										`translate(${matrix.e}px,${matrix.f}px)`,
+										`translate(0,-${transformBy}px)`,
+								  ]
+								: [
+										`translate(${matrix.e}px,${matrix.f}px)`,
+										`translate(-${transformBy}px,0)`,
+								  ],
 						},
 						timingOptions
 					);
+			}
 
-				transitionSlidesOnChangingSlideNoAnimation.current.onfinish =
-					function onAnimationEnd() {
-						transitionSlidesOnChangingSlideNoAnimation.current?.commitStyles();
-						transitionSlidesOnChangingSlideNoAnimation.current?.cancel();
-					};
-
-				if (!carouselDotsContainerAnimation) {
-					return;
-				}
-
+			if (carouselDotsContainerAnimation) {
 				carouselDotsContainerAnimation.play();
 			}
+
+			if (!transitionSlidesOnChangingSlideNoAnimation.current) return;
+
+			//commit styles of last frame and remove animation (cancel method)
+			//on finish to prevent racking up unnecessary animation instances
+			transitionSlidesOnChangingSlideNoAnimation.current.onfinish =
+				function onAnimationEnd() {
+					transitionSlidesOnChangingSlideNoAnimation.current?.commitStyles();
+					transitionSlidesOnChangingSlideNoAnimation.current?.cancel();
+				};
 		},
-		[CarouselDots.AutoHideAfterTransition, isVertical]
+		[
+			AnimationOptions?.AnimationType,
+			CarouselDots.AutoHideAfterTransition,
+			isVertical,
+			prevSlideNo,
+		]
 	);
 
 	//function to change slideNo
@@ -570,9 +687,9 @@ function Carousel({
 			}
 
 			if (incOrDec === "increment") {
-				setSlideNo((prev) => {
+				setSlideNo((currSlideNo) => {
 					if (
-						prev ===
+						currSlideNo ===
 						childrenWithStyleProp.length - NoOfSlidesInView
 					) {
 						if (isInfiniteLoop) {
@@ -581,27 +698,27 @@ function Carousel({
 							//returning the same value isn't going to
 							//trigger a re-render,hence I'm calling the
 							//changeSlide function inline
-							changeSlide(prev);
-							return prev;
+							changeSlide(currSlideNo);
+							return currSlideNo;
 						}
 					} else {
-						return prev + 1;
+						return currSlideNo + 1;
 					}
 				});
 			} else {
-				setSlideNo((prev) => {
-					if (prev === 0) {
+				setSlideNo((currSlideNo) => {
+					if (currSlideNo === 0) {
 						if (isInfiniteLoop) {
 							return (
 								childrenWithStyleProp.length - NoOfSlidesInView
 							);
 						} else {
 							//same as above
-							changeSlide(prev);
-							return prev;
+							changeSlide(currSlideNo);
+							return currSlideNo;
 						}
 					} else {
-						return prev - 1;
+						return currSlideNo - 1;
 					}
 				});
 			}
@@ -636,6 +753,25 @@ function Carousel({
 
 	//useLayoutEffects------------------------------------------------------------------------------
 
+	//arrange slides in a stack if AnimationOptions.AnimationType === stack
+	useLayoutEffect(() => {
+		if (AnimationOptions?.AnimationType !== "stack") return;
+
+		const slidesContainer = slidesContainerRef.current as HTMLDivElement;
+		const slides = Array.from(slidesContainer.children) as HTMLElement[];
+		let slide: HTMLElement;
+		for (let index in slides) {
+			if (index === "0") continue;
+			slide =
+				slides[index].tagName.toLowerCase() === "picture"
+					? (slides[index].querySelector("img") as HTMLElement)
+					: slides[index];
+			slide.style.transform = isVertical
+				? "translateY(100%)"
+				: "translateX(100%)";
+		}
+	}, [AnimationOptions?.AnimationType, isVertical]);
+
 	//change slide whenever slideNo changes
 	useLayoutEffect(() => {
 		if (!slidesContainerRef.current) return;
@@ -662,51 +798,6 @@ function Carousel({
 
 	//useEffects------------------------------------------------------------------------------------
 
-	//media query for dots container styles
-	useEffect(() => {
-		const mediaQueryFunc = (e: MediaQueryListEvent) => {
-			if (e.matches) {
-				setMediaQuery(e.matches);
-			}
-		};
-
-		window
-			.matchMedia("(min-width: 768px)")
-			.addEventListener("change", mediaQueryFunc);
-
-		return () => {
-			window
-				.matchMedia("(min-width: 768px)")
-				.removeEventListener("change", mediaQueryFunc);
-		};
-	}, []);
-
-	//changing dots container styles based on
-	//media query
-	useEffect(() => {
-		if (
-			!CarouselDotsContainerRef.current &&
-			!CarouselDots.CarouselDotsContainerPosition
-		)
-			return;
-
-		const dotsContainer =
-			CarouselDotsContainerRef.current as HTMLDivElement;
-		const pos = CarouselDots.CarouselDotsContainerPosition;
-		if (mediaQuery) {
-			if (
-				pos === "top-left-vertical" ||
-				pos === "top-right-vertical" ||
-				pos === "bottom-left-vertical" ||
-				pos === "bottom-right-vertical"
-			) {
-				dotsContainer.style.marginBlock = "2rem";
-			} else {
-				dotsContainer.style.marginInline = "2rem";
-			}
-		}
-	}, [CarouselDots.CarouselDotsContainerPosition, mediaQuery]);
-
 	//configuring auto transition behavior when
 	//carousel isn't visible
 	useEffect(() => {
@@ -725,10 +816,14 @@ function Carousel({
 	useEffect(() => {
 		if (!slidesContainerRef.current) return;
 
+		// for AnimationOptions.AnimationType = standard
 		const slidesContainer = slidesContainerRef.current;
+		// for AnimationOptions.AnimationType = stack
+		let slideToAnimate: HTMLElement | null = null;
 		let startPosX: number;
 		let startPosY: number;
 		let firstInstance = true;
+		let secondInstance = false;
 		let prevTranslatedAmount: DOMMatrix;
 		let prevY: number;
 		let prevX: number;
@@ -738,7 +833,8 @@ function Carousel({
 		} as KeyframeAnimationOptions;
 
 		let animation: Animation;
-		let moveDirection: "x" | "y";
+		let moveDirectionAxis: "x" | "y";
+		let moveDirection: "up" | "down" | "left" | "right";
 
 		let shouldExecute = false;
 
@@ -748,6 +844,8 @@ function Carousel({
 			if (e.buttons !== 1) {
 				return;
 			}
+
+			slideToAnimate = null;
 
 			prevTranslatedAmount = new DOMMatrix(
 				getComputedStyle(slidesContainer).transform
@@ -782,7 +880,7 @@ function Carousel({
 				}
 				let diff: number;
 				let translateAmount: number;
-				if (moveDirection === "x") {
+				if (moveDirectionAxis === "x") {
 					//only read movement along the x-axis
 					diff = startPosX - e.clientX;
 
@@ -807,16 +905,25 @@ function Carousel({
 							: (translateAmount = 0);
 					}
 
-					animation = slidesContainer.animate(
-						{
-							//only animate in the direction the user is dragging the slides
-							transform: [
-								`translate(${prevX}px,${prevY}px)`,
-								`translate(${translateAmount}px,${prevY}px)`,
-							],
-						},
-						timingOptions
-					);
+					const keyframesObject = {
+						//only animate in the direction the user is dragging the slides
+						transform: [
+							`translate(${prevX}px,${prevY}px)`,
+							`translate(${translateAmount}px,${prevY}px)`,
+						],
+					} as PropertyIndexedKeyframes;
+
+					if (slideToAnimate) {
+						animation = (slideToAnimate as HTMLElement).animate(
+							keyframesObject,
+							timingOptions
+						);
+					} else {
+						animation = slidesContainer.animate(
+							keyframesObject,
+							timingOptions
+						);
+					}
 
 					prevX = translateAmount;
 				} else {
@@ -841,31 +948,129 @@ function Carousel({
 							: (translateAmount = 0);
 					}
 
-					animation = slidesContainer.animate(
-						{
-							transform: [
-								`translate(${prevX}px,${prevY}px)`,
-								`translate(${prevX}px,${translateAmount}px)`,
-							],
-						},
-						timingOptions
-					);
+					const keyframesObject = {
+						transform: [
+							`translate(${prevX}px,${prevY}px)`,
+							`translate(${prevX}px,${translateAmount}px)`,
+						],
+					} as PropertyIndexedKeyframes;
+					if (slideToAnimate) {
+						animation = slideToAnimate.animate(
+							keyframesObject,
+							timingOptions
+						);
+					} else {
+						animation = slidesContainer.animate(
+							keyframesObject,
+							timingOptions
+						);
+					}
 
 					prevY = translateAmount;
 				}
 			}
 
+			if (secondInstance) {
+				if (!(AnimationOptions?.AnimationType === "stack")) {
+					secondInstance = false;
+					return;
+				}
+
+				if (moveDirectionAxis === "x") {
+					moveDirection =
+						startPosX - e.clientX < 0 ? "right" : "left";
+
+					//get which slide to animate using setState to get
+					//currState value
+					const slides = Array.from(
+						slidesContainer.children
+					) as HTMLElement[];
+					const currSlideNo = Number(
+						slidesContainer.getAttribute("data-active-slide")
+					);
+
+					if (moveDirection === "left") {
+						if (currSlideNo === slides.length - 1) {
+							secondInstance = false;
+							return;
+						}
+						//if movement towards the left, animate subsequent slide
+						slideToAnimate =
+							slides[currSlideNo + 1].tagName.toLowerCase() ===
+							"picture"
+								? (slides[currSlideNo + 1].querySelector(
+										"img"
+								  ) as HTMLElement)
+								: slides[currSlideNo + 1];
+					} else if (moveDirection === "right") {
+						if (currSlideNo === 0) {
+							secondInstance = false;
+							return;
+						}
+						//if movement towards the right, animate current slide
+						slideToAnimate =
+							slides[currSlideNo].tagName.toLowerCase() ===
+							"picture"
+								? (slides[currSlideNo].querySelector(
+										"img"
+								  ) as HTMLElement)
+								: slides[currSlideNo];
+					}
+
+					if (slideToAnimate) {
+						prevTranslatedAmount = new DOMMatrix(
+							getComputedStyle(slideToAnimate).transform
+						);
+						prevX = prevTranslatedAmount.e;
+						prevY = prevTranslatedAmount.f;
+						// console.log(prevX, prevY);
+					}
+				} else {
+					moveDirection = startPosY - e.clientY < 0 ? "down" : "up";
+
+					//get which slide to animate using setState to get
+					//currState value
+					const slides = Array.from(
+						slidesContainer.children
+					) as HTMLElement[];
+					const currSlideNo = Number(
+						slidesContainer.getAttribute("data-active-slide")
+					);
+
+					if (
+						moveDirection === "up" &&
+						currSlideNo !== slides.length - 1
+					) {
+						//if movement towards the left, animate subsequent slide
+						slideToAnimate = slides[currSlideNo + 1];
+					} else if (moveDirection === "down" && currSlideNo !== 0) {
+						//if movement towards the right, animate current slide
+						slideToAnimate = slides[currSlideNo];
+					}
+
+					if (slideToAnimate) {
+						prevTranslatedAmount = new DOMMatrix(
+							getComputedStyle(slideToAnimate).transform
+						);
+						prevX = prevTranslatedAmount.e;
+						prevY = prevTranslatedAmount.f;
+					}
+				}
+				secondInstance = false;
+				shouldExecute = true;
+			}
 			if (firstInstance) {
 				let diffX = startPosX - e.clientX;
 				let diffY = startPosY - e.clientY;
 				//once user drags the slide in a certain direction
 				//only allow movement in that particular direction
 				Math.abs(diffX) > Math.abs(diffY)
-					? (moveDirection = "x")
-					: (moveDirection = "y");
-				// console.log(moveDirection);
+					? (moveDirectionAxis = "x")
+					: (moveDirectionAxis = "y");
+				// console.log(moveDirectionAxis);
 				firstInstance = false;
-				shouldExecute = true;
+				secondInstance = true;
+				// slideToAnimate = null;
 			}
 		}
 
@@ -895,10 +1100,41 @@ function Carousel({
 				// (!isVertical && moveDirection === "y") ||
 				Math.abs(diff) < threshold
 			) {
-				setSlideNo((prev) => {
-					changeSlide(prev);
-					return prev;
-				});
+				if (slideToAnimate) {
+					// const prevTranslatedVal = new DOMMatrix(
+					// 	getComputedStyle(slideToAnimate).transform
+					// );
+					let translateTo: string;
+					switch (moveDirection) {
+						case "left":
+							translateTo = `translate(100%,0)`;
+							break;
+						case "right":
+							translateTo = "translate(0,0)";
+							break;
+						case "down":
+							translateTo = "translate(0,0)";
+							break;
+						default:
+							translateTo = "translate(100%,0)";
+							break;
+					}
+
+					animation = slideToAnimate.animate(
+						{
+							transform: [
+								`translate(${prevX}px,${prevY}px)`,
+								translateTo,
+							],
+						},
+						timingOptions
+					);
+				} else {
+					setSlideNo((currSlideNo) => {
+						changeSlide(currSlideNo);
+						return currSlideNo;
+					});
+				}
 			} else {
 				// if (diff > 0 && Math.abs(diff) > threshold) {
 				if (diff > 0) {
@@ -933,6 +1169,7 @@ function Carousel({
 			// slidesContainer.style.cursor = "initial";
 		};
 	}, [
+		AnimationOptions?.AnimationType,
 		IncrementOrDecrementSlideNo,
 		changeSlide,
 		isVertical,
@@ -995,6 +1232,50 @@ function Carousel({
 		slidesContainerRef,
 	]);
 
+	//check if active slide is a video element
+	// if configured, pause until video has finished
+	// playing to move to next slide
+	useEffect(() => {
+		if (
+			!slidesContainerRef.current ||
+			!AutoSlideChange.waitUntilVideoHasFinishedPlayingToMoveToNextSlide
+		)
+			return;
+
+		const slides = Array.from(slidesContainerRef.current.children);
+		let activeSlide = slides[slideNo] as HTMLElement;
+
+		if (
+			activeSlide.tagName.toLowerCase() !== "video" &&
+			!activeSlide.querySelector("video")
+		)
+			return;
+
+		activeSlide =
+			activeSlide.tagName.toLowerCase() === "video"
+				? activeSlide
+				: (activeSlide.querySelector("video") as HTMLVideoElement);
+		let prevAutoSlideChangeIsPaused: boolean | null;
+		setAutoSlideChangeIsPaused((prevVal) => {
+			prevAutoSlideChangeIsPaused = prevVal;
+			return true;
+		});
+
+		function executeOnVideoPlaybackEnd() {
+			// only set to false if previous value was not true
+			if (prevAutoSlideChangeIsPaused) return;
+			setAutoSlideChangeIsPaused(false);
+		}
+		activeSlide.addEventListener("ended", executeOnVideoPlaybackEnd);
+
+		return () => {
+			activeSlide.removeEventListener("ended", executeOnVideoPlaybackEnd);
+		};
+	}, [
+		AutoSlideChange.waitUntilVideoHasFinishedPlayingToMoveToNextSlide,
+		slideNo,
+	]);
+
 	//setup auto transitions
 	useEffect(() => {
 		if (!AutoSlideChange.isTrue || !isInfiniteLoop) return;
@@ -1005,11 +1286,11 @@ function Carousel({
 		if (!autoSlideChangeIsPaused) {
 			timer = setInterval(() => {
 				// IncrementOrDecrementSlideNo("increment");
-				setSlideNo((prev) => {
-					if (prev === childrenWithStyleProp.length - 1) {
+				setSlideNo((currSlideNo) => {
+					if (currSlideNo === childrenWithStyleProp.length - 1) {
 						return 0;
 					}
-					return prev + 1;
+					return currSlideNo + 1;
 				});
 			}, AutoSlideChange.timer);
 		}
@@ -1030,7 +1311,7 @@ function Carousel({
 	//pause interval (auto slide transitions)
 	useEffect(() => {
 		//event handler
-		const changeAutoSlideChangeState = (e: Event) => {
+		const changeAutoSlideChangeState = () => {
 			if (document.visibilityState === "hidden") {
 				settingAutoSlideChangePause(true);
 			}
@@ -1100,6 +1381,7 @@ function Carousel({
 				style={slidesContainerStyles}
 				ref={slidesContainerRef}
 				className={CssStyles["slides-container"]}
+				data-active-slide={slideNo}
 			>
 				{childrenWithStyleProp}
 			</div>
@@ -1164,43 +1446,78 @@ function Carousel({
 				</>
 			)}
 			{CarouselDots.isTrue && (
-				<div
+				<RadioGroup
+					controlled={true}
 					style={CarouselDotsContainerStyles}
 					className={CssStyles["carousel-dots-container"]}
-					ref={CarouselDotsContainerRef}
 				>
-					{CarouselDots.label && (
-						<span
-							style={CarouselDotsLabelStyles}
-							className={CssStyles["carousel-dots-label"]}
-						>
-							{CarouselDots.label[slideNo]}
-						</span>
-					)}
-					<RadioGroup
-						ref={CarouselDotsRadioGroupRef}
-						controlled={true}
-					>
-						{Array.from(
-							{
-								length:
-									childrenWithStyleProp.length -
-									NoOfSlidesInView +
-									1,
-							},
-							(_, index) => {
+					{Array.from(
+						{
+							length:
+								childrenWithStyleProp.length -
+								NoOfSlidesInView +
+								1,
+						},
+						(_, index) => {
+							if (CarouselDots.label) {
 								return (
 									<RadioBtn
 										onChange={handleClickOnCarouselDots}
-										// dataOrder={index}
+										noDots={true}
+										labelName={CarouselDots.label[index]}
 										key={index}
 										checked={slideNo === index}
 									/>
 								);
 							}
-						)}
-					</RadioGroup>
-				</div>
+							return (
+								<RadioBtn
+									onChange={handleClickOnCarouselDots}
+									// dataOrder={index}
+									key={index}
+									checked={slideNo === index}
+								/>
+							);
+						}
+					)}
+				</RadioGroup>
+				// <div
+				// 	style={CarouselDotsContainerStyles}
+				// 	className={CssStyles["carousel-dots-container"]}
+				// 	ref={CarouselDotsContainerRef}
+				// >
+				// 	{CarouselDots.label && (
+				// 		<span
+				// 			style={CarouselDotsLabelStyles}
+				// 			className={CssStyles["carousel-dots-label"]}
+				// 		>
+				// 			{CarouselDots.label[slideNo]}
+				// 		</span>
+				// 	)}
+				// 	<RadioGroup
+				// 		ref={CarouselDotsRadioGroupRef}
+				// 		controlled={true}
+				// 	>
+				// 		{Array.from(
+				// 			{
+				// 				length:
+				// 					childrenWithStyleProp.length -
+				// 					NoOfSlidesInView +
+				// 					1,
+				// 			},
+				// 			(_, index) => {
+				// 				return (
+				// 					<RadioBtn
+				// 						onChange={handleClickOnCarouselDots}
+				// 						// dataOrder={index}
+				// 						key={index}
+				// 						checked={slideNo === index}
+				// 					/>
+				// 				);
+				// 			}
+				// 		)}
+				// 	</RadioGroup>
+				// </div>
 			)}
 		</section>
 	);

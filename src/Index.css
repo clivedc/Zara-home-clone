@@ -23,6 +23,7 @@
 	--font-weight-bold-1: 550;
 	--font-weight-bold-2: 600;
 	--root-font-size-1: 15px;
+	--root-font-size-1-m: 16px;
 	--root-font-size-1-l: 17px;
 	--root-font-size-2: 12.5px;
 	--root-font-size-3: 11.5px;
@@ -32,8 +33,8 @@
 	--root-font-size-7: 8px;
 	--root-font-size-superscript: 8px;
 	--line-height: 1.4;
-	font-variation-settings: "YTLC" 570;
-	font-variation-settings: "YTUC" 760;
+	/* font-variation-settings: "YTLC" 570;
+	font-variation-settings: "YTUC" 760; */
 	/* welcome pg logo variables */
 	--logo-top: 3.2vmax;
 	--logo-left: 3.2vmax;
@@ -52,7 +53,7 @@ input,
 button {
 	font-family: var(--font-1);
 	font-weight: var(--font-weight-normal);
-	font-stretch: extra-condensed;
+	font-size: var(--root-font-size-3);
 }
 
 ul {
@@ -63,7 +64,7 @@ ul {
 
 button {
 	/* transform: scaleY(1.1); */
-	font-stretch: extra-condensed;
+	/* font-stretch: extra-condensed; */
 	/* font-size: var(--root-font-size-2); */
 	cursor: pointer;
 	background-color: transparent;
@@ -85,4 +86,14 @@ img {
 	width: 30rem;
 	height: 30rem;
 	margin: 0 auto;
+}
+
+a {
+	color: var(--text-color-primary);
+}
+
+@media (min-width: 768px) {
+	body {
+		font-size: var(--root-font-size-3);
+	}
 }

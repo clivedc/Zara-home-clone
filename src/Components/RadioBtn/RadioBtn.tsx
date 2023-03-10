@@ -34,6 +34,7 @@ const RadioBtn = forwardRef<HTMLInputElement, RadioBtnPropsType>(
 				display: "flex",
 				gap: "0.5rem",
 				alignItems: "center",
+				cursor: "pointer",
 			};
 		};
 

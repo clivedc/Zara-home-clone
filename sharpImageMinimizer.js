@@ -2,8 +2,8 @@ const fs = require("fs");
 const path = require("path");
 const sharp = require("sharp");
 
-const targetPath = path.resolve(__dirname, "assets");
-const destinationPath = path.resolve(__dirname, "optimizedAssets");
+const targetPath = path.resolve(__dirname, "assets/new");
+const destinationPath = path.resolve(__dirname, "assets/optimizedAssets");
 fs.readdir(targetPath, async (err, files) => {
 	if (err) {
 		console.log("FAILED :(\n" + err);

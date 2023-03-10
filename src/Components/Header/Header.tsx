@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import "./Header.css";
-import jsonList from "../../jsonData/sideNavList.json";
+import jsonList from "./sideNavList.json";
 import { convertSuperscript } from "./utils";
 import { jsonListType } from "./types";
 // import { Link, Outlet, useOutletContext } from "react-router-dom";
@@ -9,21 +9,28 @@ const navList = jsonList as jsonListType;
 
 type category = "man" | "woman" | "kids";
 interface HeaderPropsType {
-	setCategory: React.Dispatch<React.SetStateAction<category | undefined>>;
+	category: category;
+	setCategory: React.Dispatch<React.SetStateAction<category>>;
 	headerLogoColor: "black" | "white";
 }
 
-const Header = ({ setCategory, headerLogoColor }: HeaderPropsType) => {
-	const sideMenuRef = useRef<HTMLElement>(null!);
-	const tabPanelContainerRef = useRef<HTMLDivElement>(null!);
+const Header = ({
+	category,
+	setCategory,
+	headerLogoColor,
+}: HeaderPropsType) => {
+	const sideMenuRef = useRef<HTMLElement>(null);
+	const tabPanelContainerRef = useRef<HTMLDivElement>(null);
 	// const [category, setCategory] = useState<string | undefined>("");
 	// const [headerLogoColor, setHeaderLogoColor] = useState("black");
 
-	const openMenu: React.MouseEventHandler = (e) => {
+	const openMenu: React.MouseEventHandler = () => {
+		if (!sideMenuRef.current) return;
 		sideMenuRef.current.classList.add("side-menu-wrapper--open");
 	};
 
-	const closeSideMenu: React.MouseEventHandler = (e) => {
+	const closeSideMenu: React.MouseEventHandler = () => {
+		if (!sideMenuRef.current) return;
 		sideMenuRef.current.classList.remove("side-menu-wrapper--open");
 	};
 
@@ -33,45 +40,54 @@ const Header = ({ setCategory, headerLogoColor }: HeaderPropsType) => {
 	// );
 
 	const showActiveTabPanel: React.MouseEventHandler = (e) => {
-		if (e.currentTarget.classList.contains("active-tab")) {
-			// setCategory((prev) => {
-			// 	if (prev === "") {
-			// 		setTimeout(() => setCategory("woman"), 0);
-			// 	}
-			// 	setTimeout(() => setCategory(prev), 0);
-			// 	return undefined;
-			// });
-			setCategory((prevVal) => {
-				queueMicrotask(() => setCategory(prevVal));
-				return undefined;
-			});
-			return;
-		}
+		if (!tabPanelContainerRef.current) return;
+
+		// if (e.currentTarget.classList.contains("active-tab")) {
+		// 	// setCategory((prev) => {
+		// 	// 	if (prev === "") {
+		// 	// 		setTimeout(() => setCategory("woman"), 0);
+		// 	// 	}
+		// 	// 	setTimeout(() => setCategory(prev), 0);
+		// 	// 	return undefined;
+		// 	// });
+		// 	setCategory((prevVal) => {
+		// 		queueMicrotask(() => setCategory(prevVal));
+		// 		return undefined;
+		// 	});
+		// 	return;
+		// }
+
 		const ele = e.currentTarget;
 		const parent = ele.parentElement;
 		const tabsArray = Array.from(
 			parent?.children as HTMLCollection
 		) as HTMLButtonElement[];
-		tabsArray.forEach((tab) => tab.classList.remove("active-tab"));
-		ele.classList.add("active-tab");
+		tabsArray.forEach((tab) =>
+			tab.classList.remove("side-menu__nav__tabs__tab--active-tab")
+		);
+		ele.classList.add("side-menu__nav__tabs__tab--active-tab");
 
 		const id = ele.id as category;
 		tabPanelContainerRef.current.dataset.activeTabpanel = id;
 		setCategory(id);
 	};
 
-	// useEffect(() => {
-	// 	console.log(category);
-	// }, [category]);
+	useEffect(() => {
+		if (!tabPanelContainerRef.current) return;
+
+		console.log(tabPanelContainerRef.current.dataset.activeTabpanel);
+	});
 
 	//handle click outside
 	//side menu when open
 	useEffect(() => {
+		if (!sideMenuRef.current) return;
+
 		const handleClickOutside = (e: PointerEvent) => {
 			//if side menu isn't
 			//open then return
 			if (
-				!sideMenuRef.current.classList.contains(
+				!sideMenuRef.current?.classList.contains(
 					"side-menu-wrapper--open"
 				)
 			) {
@@ -80,8 +96,10 @@ const Header = ({ setCategory, headerLogoColor }: HeaderPropsType) => {
 
 			//if click is outside the side
 			//menu then close the side menu
-			if (!sideMenuRef.current.contains(e.target as HTMLElement)) {
-				sideMenuRef.current.classList.remove("side-menu-wrapper--open");
+			if (!sideMenuRef.current?.contains(e.target as HTMLElement)) {
+				sideMenuRef.current?.classList.remove(
+					"side-menu-wrapper--open"
+				);
 			}
 		};
 
@@ -141,9 +159,9 @@ const Header = ({ setCategory, headerLogoColor }: HeaderPropsType) => {
 						<svg
 							className="cart__bag"
 							// style={{ backgroundColor: "red" }}
-							height="28" //22
-							width="24" //21
-							viewBox="4 6 44 44" //40
+							height="18" //22
+							width="18" //21
+							viewBox="2 2 45 45" //40
 							xmlns="http://www.w3.org/2000/svg"
 							fill={headerLogoColor}
 						>
@@ -152,7 +170,7 @@ const Header = ({ setCategory, headerLogoColor }: HeaderPropsType) => {
 								stroke="white"
 								strokeWidth="1"
 							/>
-							<foreignObject x="6" y="18" width="22" height="21">
+							<foreignObject x="11" y="18" width="18" height="18">
 								<span
 									className="cart__bag__no"
 									style={
@@ -164,7 +182,7 @@ const Header = ({ setCategory, headerLogoColor }: HeaderPropsType) => {
 									0
 								</span>
 							</foreignObject>
-							<g className="cart__ribbon">
+							{/* <g className="cart__ribbon">
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
 									height="12"
@@ -182,7 +200,7 @@ const Header = ({ setCategory, headerLogoColor }: HeaderPropsType) => {
 										stroke={headerLogoColor}
 									/>
 								</svg>
-							</g>
+							</g> */}
 						</svg>
 					</section>
 					<section data-header-links>
@@ -249,7 +267,11 @@ const Header = ({ setCategory, headerLogoColor }: HeaderPropsType) => {
 					<nav className="side-menu__nav">
 						<div className="side-menu__nav__tabs">
 							<button
-								className="active-tab"
+								className={
+									category === "woman"
+										? "side-menu__nav__tabs__tab side-menu__nav__tabs__tab--active-tab"
+										: "side-menu__nav__tabs__tab"
+								}
 								role="tab"
 								id="woman"
 								onClick={showActiveTabPanel}
@@ -257,6 +279,11 @@ const Header = ({ setCategory, headerLogoColor }: HeaderPropsType) => {
 								WOMAN
 							</button>
 							<button
+								className={
+									category === "man"
+										? "side-menu__nav__tabs__tab side-menu__nav__tabs__tab--active-tab"
+										: "side-menu__nav__tabs__tab"
+								}
 								role="tab"
 								id="man"
 								onClick={showActiveTabPanel}
@@ -264,6 +291,11 @@ const Header = ({ setCategory, headerLogoColor }: HeaderPropsType) => {
 								MAN
 							</button>
 							<button
+								className={
+									category === "kids"
+										? "side-menu__nav__tabs__tab side-menu__nav__tabs__tab--active-tab"
+										: "side-menu__nav__tabs__tab"
+								}
 								role="tab"
 								id="kids"
 								onClick={showActiveTabPanel}
@@ -274,7 +306,7 @@ const Header = ({ setCategory, headerLogoColor }: HeaderPropsType) => {
 						<div
 							className="side-menu__nav__tabpanels"
 							ref={tabPanelContainerRef}
-							data-active-tabpanel="woman"
+							data-active-tabpanel={category}
 						>
 							<ul role="tabpanel" aria-labelledby="woman">
 								{navList.woman.map(convertSuperscript)}

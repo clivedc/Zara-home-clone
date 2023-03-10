@@ -1,5 +1,8 @@
 const { mergeWithRules } = require("webpack-merge"),
 	commonConfig = require("./webpack.config.common"),
+	path = require("path"),
+	webpackBundleAnalyzerPlugin =
+		require("webpack-bundle-analyzer").BundleAnalyzerPlugin,
 	{ EsbuildPlugin } = require("esbuild-loader");
 
 const prodConfig = {
@@ -7,33 +10,33 @@ const prodConfig = {
 	devtool: "source-map",
 	output: {
 		filename: "[name].[contenthash].js",
+		path: path.resolve(__dirname, "../build"),
 	},
 	optimization: {
 		minimizer: [
 			new EsbuildPlugin({
-				target: "es5",
+				target: "es6",
 				css: true,
 				exclude: /node_modules/,
 			}),
 		],
-	},
-	module: {
-		rules: [
-			{
-				test: /\.tsx?$/i,
-				exclude: /node_modules/,
-				use: {
-					loader: "babel-loader",
-					options: {
-						presets: [
-							"@babel/preset-env",
-							"@babel/preset-typescript",
-						],
-					},
+		runtimeChunk: "single",
+		splitChunks: {
+			cacheGroups: {
+				vendor: {
+					test: /node_modules/,
+					name: "vendors",
+					chunks: "all",
 				},
 			},
-		],
+		},
 	},
+	plugins: [new webpackBundleAnalyzerPlugin()],
 };
 
-mergeWithRules({})(commonConfig, prodConfig);
+module.exports = mergeWithRules({
+	optimization: {
+		minimizer: "append",
+	},
+	plugins: "append",
+})(commonConfig, prodConfig);
