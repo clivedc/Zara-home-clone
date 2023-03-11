@@ -47,22 +47,8 @@ jobs:
                   git checkout main -- build
                   git mv build/* ./
                   rmdir build
-                  ls resources
-                  
-            # archive build files in Windows
-            - name: Zip files (Windows)
-              if: runner.os == 'Windows'
-              shell: pwsh
-              run: |
-                Compress-Archive '*' 'build.zip'
-                ri '*' -r -fo -Exclude '*.zip'
-              
-            # archive build files in Linux
-            - name: Zip files (Linux)
-              if: runner.os != 'Windows'
-              run: |
-                npm i -g zip
-                zip -r -m build.zip *
+                  ls resources/images
+                  ls resources/videos
              
             - name: Upload a Build Artifact
               uses: actions/upload-artifact@v3.1.2
@@ -72,7 +58,7 @@ jobs:
                 name: build-files
                 
                 # A file, directory or wildcard pattern that describes what to upload
-                path: ./build.zip
+                path: ./
                
                # The desired behavior if no files are found using the provided path.
                # optional, default is warn
