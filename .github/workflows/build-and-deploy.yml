@@ -48,23 +48,12 @@ jobs:
                   git mv build/* ./
                   rmdir build
              
-            - name: Upload a Build Artifact
-              uses: actions/upload-artifact@v2.2.4
+            - name: Upload GitHub Pages artifact
+              uses: actions/upload-pages-artifact@v1.0.7
               with:
-                # Artifact name
-                # optional, default is artifact
-                name: build-files
-                
-                # A file, directory or wildcard pattern that describes what to upload
+                # Path of the directory containing the static assets.
+                # default is _site/
                 path: ./
-               
-               # The desired behavior if no files are found using the provided path.
-               # optional, default is warn
-               # Available Options:
-                   # warn: Output a warning but do not fail the action
-                   # error: Fail the action with an error message
-                   # ignore: Do not output any warnings or errors, the acti
-                if-no-files-found: error
 
     # Deploy job
     deploy:
@@ -95,5 +84,3 @@ jobs:
             - name: Deploy to GitHub Pages
               id: deployment
               uses: actions/deploy-pages@v1.2.5
-              with: 
-                artifact_name: build-files
