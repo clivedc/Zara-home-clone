@@ -36,18 +36,7 @@ jobs:
               run: |
                   npm install
                   npm run build
-          
-            
-            - name: checkout gh-pages branch and copy build files
-              run: |
-                  echo ${{ github.workspace }}
-                  git branch
-                  git checkout -b gh-pages
-                  git branch
-                  rm -rf *
-                  git checkout main -- build
-                  git mv build/* ./
-                  rmdir build
+                  
              
     # Build and upload artifact
     build-artifact:
@@ -55,6 +44,16 @@ jobs:
        runs-on: ubuntu-latest
        steps:
         - uses: actions/checkout@v3
+        - name: checkout gh-pages branch and copy build files
+          run: |
+              echo ${{ github.workspace }}
+              git branch
+              git checkout -b gh-pages
+              git branch
+              rm -rf *
+              git checkout main -- build
+              git mv build/* ./
+              rmdir build
         - name: Upload a Build Artifact
           uses: actions/upload-artifact@v3.1.2
           with:
