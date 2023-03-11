@@ -41,7 +41,8 @@ jobs:
               run: |
                   echo ${{ github.workspace }}
                   git branch
-                  git checkout gh-pages
+                  git checkout -b gh-pages
+                  git branch
                   rm -rf *
                   git checkout main -- build
                   git mv build/* ./
