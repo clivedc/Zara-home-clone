@@ -48,21 +48,21 @@ jobs:
                   git mv build/* ./
                   rmdir build
              
-            - name: Upload GitHub Pages artifact
-              uses: actions/upload-pages-artifact@v1.0.7
-              with:
-                # Path of the directory containing the static assets.
-                # default is _site/
-                path: ./
+    # Build and upload artifact
+    build-artifact:
+       needs: build
+       runs-on: ubuntu-latest
+       steps:
+         - name: Upload GitHub Pages artifact
+           uses: actions/upload-pages-artifact@v1.0.7
+           with:
+            # Path of the directory containing the static assets.
+            # default is _site/
+            path: ./
 
     # Deploy job
     deploy:
-        needs: build
-
-        # set default shell to bash
-        defaults:
-            run:
-                shell: bash
+        needs: build-artifact
 
         # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
         permissions:
