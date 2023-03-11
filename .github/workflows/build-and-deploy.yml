@@ -32,12 +32,10 @@ jobs:
       run: |
         npm install
         npm run build
-        ^C
 
     - name: checkout gh-pages branch and copy build files
+      shell: bash
       run: |
-        if: runner.os == "Windows"
-          & 'c:/program files/git/bin/sh.exe'
         git switch gh-pages
         rm -rf *
         git checkout main -- build
