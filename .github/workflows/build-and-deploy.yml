@@ -12,7 +12,7 @@ jobs:
   
   # Build job
   build:
-    if: github.event_name == "push" || (github.event.pull_request.merged == true)
+    if: ${{github.event_name == "push" || github.event.pull_request.merged == true}}
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -48,6 +48,9 @@ jobs:
   deploy:
     needs: build
 
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
     permissions:
       pages: write      # to deploy to Pages
@@ -59,7 +62,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     # Specify runner + deployment step
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
