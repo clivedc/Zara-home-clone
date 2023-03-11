@@ -48,7 +48,13 @@ jobs:
                   git mv build/* ./
                   rmdir build
                   ls resources
-                  
+              
+            # archive all the files files  
+            - name: zip files
+              run: |
+                  npm i -g zip
+                  zip -r build.zip *
+             
             - name: Upload a Build Artifact
               uses: actions/upload-artifact@v3.1.2
               with:
