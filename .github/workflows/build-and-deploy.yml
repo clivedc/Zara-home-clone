@@ -4,6 +4,7 @@ on:
   push:
     branches: [ "main" ]
   pull_request:
+    types: [closed]
     branches: [ "main" ]
   workflow_dispatch:
 
@@ -11,11 +12,12 @@ jobs:
   
   # Build job
   build:
+    if: github.event_name == "push" || (github.event.pull_request.merged == true)
     runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
-        node-version: [14.x, 16.x, 18.x]
+        node-version: [16.x, 18.x]
         os: [ubuntu-latest, windows-latest, macOS-latest]
 
     steps:
@@ -30,6 +32,7 @@ jobs:
       run: |
         npm install
         npm run build
+        ^C
 
     - name: checkout gh-pages branch and copy build files
       run: |
