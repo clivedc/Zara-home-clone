@@ -9,7 +9,7 @@
 		"start-n": "webpack -c .configs/webpack.config.dev.js",
 		"start": "webpack serve -c .configs/webpack.config.dev.js",
 		"build": "webpack -c .configs/webpack.config.prod.js",
-		"deploy": "gh-pages -d build"
+		"deploy": "gh-pages -d ./"
 	},
 	"author": "Clive D' Costa",
 	"license": "ISC",
