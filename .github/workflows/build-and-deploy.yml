@@ -49,7 +49,7 @@ jobs:
                   rmdir build
              
             - name: Upload a Build Artifact
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v2.2.4
               with:
                 # Artifact name
                 # optional, default is artifact
