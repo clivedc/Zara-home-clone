@@ -1,68 +1,76 @@
 name: NodeJS with Webpack
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    types: [closed]
-    branches: [ "main" ]
-  workflow_dispatch:
+    push:
+        branches: ["main"]
+    pull_request:
+        types: [closed]
+        branches: ["main"]
+    workflow_dispatch:
 
 jobs:
-  
-  # Build job
-  build:
-    if: github.event_name == 'push' || github.event.pull_request.merged == true
-    runs-on: ${{ matrix.os }}
+    # Build job
+    build:
+        if: github.event_name == 'push' || github.event.pull_request.merged == true
+        runs-on: ${{ matrix.os }}
 
-    strategy:
-      matrix:
-        node-version: [16.x, 18.x]
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        strategy:
+            matrix:
+                node-version: [16.x, 18.x]
+                os: [ubuntu-latest, windows-latest, macOS-latest]
 
-    steps:
-    - uses: actions/checkout@v3
+        # set default shell to bash
+        defaults:
+            run:
+                shell: bash
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
+        steps:
+            - uses: actions/checkout@v3
 
-    - name: npm install and build
-      run: |
-        npm install
-        npm run build
+            - name: Use Node.js ${{ matrix.node-version }}
+              uses: actions/setup-node@v3
+              with:
+                  node-version: ${{ matrix.node-version }}
 
-    - name: checkout gh-pages branch and copy build files
-      shell: bash
-      run: |
-        git switch gh-pages
-        rm -rf *
-        git checkout main -- build
-        git mv build/* ./
-        rmdir build
-  
-  # Deploy job
-  deploy:
-    needs: build
+            - name: npm install and build
+              run: |
+                  npm install
+                  npm run build
 
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
-        
-    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
-    permissions:
-      pages: write      # to deploy to Pages
-      id-token: write   # to verify the deployment originates from an appropriate source
+            - name: checkout gh-pages branch and copy build files
+              run: |
+                  git switch gh-pages
+                  rm -rf *
+                  git checkout main -- build
+                  git mv build/* ./
+                  rmdir build
 
-    # Deploy to the github-pages environment
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    # Deploy job
+    deploy:
+        needs: build
 
-    # Specify runner + deployment step
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v1.2.5
+        strategy:
+            matrix:
+                os: [ubuntu-latest, windows-latest, macOS-latest]
+
+        # set default shell to bash
+        defaults:
+            run:
+                shell: bash
+
+        # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+        permissions:
+            pages: write # to deploy to Pages
+            id-token: write # to verify the deployment originates from an appropriate source
+
+        # Deploy to the github-pages environment
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+
+        # Specify runner + deployment step
+        runs-on: ${{ matrix.os }}
+        steps:
+            - name: Deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v1.2.5
