@@ -40,6 +40,7 @@ jobs:
             - name: checkout gh-pages branch and copy build files
               run: |
                   echo ${{ github.workspace }}
+                  git branch
                   git checkout gh-pages
                   rm -rf *
                   git checkout main -- build
