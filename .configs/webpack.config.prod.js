@@ -5,6 +5,8 @@ const { mergeWithRules } = require("webpack-merge"),
 		require("webpack-bundle-analyzer").BundleAnalyzerPlugin,
 	{ EsbuildPlugin } = require("esbuild-loader");
 
+const useAnalyzer = process.env.npm_config_useAnalyzer;
+
 const prodConfig = {
 	mode: "production",
 	devtool: "source-map",
@@ -31,7 +33,7 @@ const prodConfig = {
 			},
 		},
 	},
-	plugins: [new webpackBundleAnalyzerPlugin()],
+	plugins: [...(useAnalyzer ? [new webpackBundleAnalyzerPlugin()] : [])],
 };
 
 module.exports = mergeWithRules({
