@@ -47,7 +47,7 @@ jobs:
                   git checkout main -- build
                   git mv build/* ./
                   rmdir build
-                  ls
+                  ls resources
                   
             - name: Upload a Build Artifact
               uses: actions/upload-artifact@v3.1.2
