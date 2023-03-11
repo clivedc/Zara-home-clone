@@ -47,11 +47,9 @@ jobs:
                   git checkout main -- build
                   git mv build/* ./
                   rmdir build
-                  ls resources/images
-                  ls resources/videos
              
             - name: Upload a Build Artifact
-              uses: actions/upload-artifact@v3.1.2
+              uses: actions/upload-artifact@v3
               with:
                 # Artifact name
                 # optional, default is artifact
