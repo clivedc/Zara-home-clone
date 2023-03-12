@@ -25,6 +25,7 @@
 .vert-carousel-container__img-container {
 	display: grid;
 	grid-template-areas: "img-slide";
+	user-select: none;
 }
 
 .vert-carousel-container__img-container__nested-img--grid-area-name {
@@ -35,6 +36,7 @@
 	object-fit: cover;
 	width: 100%;
 	height: 100%;
+	user-select: none;
 }
 
 .vert-carousel-container__last-slide__newsletter-para {

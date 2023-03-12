@@ -64,11 +64,26 @@ export interface CarouselOptionsType {
 	};
 	setActiveSlide?: number;
 	executeOnActiveSlide?: (ActiveSlide: number) => void;
+	className?: string;
 }
 
-type child = React.ReactElement<React.HTMLAttributes<HTMLOrSVGElement>>;
+type genericHtmlElementProps = React.HTMLAttributes<HTMLOrSVGElement>;
+type lazyComponentChild = React.LazyExoticComponent<
+	React.MemoExoticComponent<React.FunctionComponent<genericHtmlElementProps>>
+> & {
+	type: {
+		_payload: {
+			_result: {
+				default: {
+					name: string;
+				};
+			};
+		};
+	};
+};
+type Child = React.ReactElement<genericHtmlElementProps> | lazyComponentChild;
 interface CarouselPropsType extends CarouselOptionsType {
-	children: child | child[];
+	children: Child | Child[];
 	// Exclude<React.ReactNode, primitives>;
 }
 
@@ -92,13 +107,15 @@ function Carousel({
 	AutoSlideChange = { isTrue: false, timer: 0 },
 	setActiveSlide,
 	executeOnActiveSlide,
+	className,
 	children,
 }: CarouselPropsType) {
 	//if button label is defined, check
 	//if label is equal to no of children
 	if (
 		CarouselArrows.label &&
-		CarouselArrows.label.length !== React.Children.toArray(children).length
+		CarouselArrows.label.length !==
+			React.Children.toArray(children as React.ReactNode).length
 	) {
 		throw new Error(
 			"Number of button labels should be equal to the number of child elements"
@@ -108,7 +125,8 @@ function Carousel({
 	//if label is equal to no of children
 	if (
 		CarouselDots.label &&
-		CarouselDots.label.length !== React.Children.toArray(children).length
+		CarouselDots.label.length !==
+			React.Children.toArray(children as React.ReactNode).length
 	) {
 		throw new Error(
 			"Number of Carousel Dot labels should be equal to the number of child elements"
@@ -308,7 +326,7 @@ function Carousel({
 	const carouselAnimationOptions = useRef(settingAnimationOptions());
 	const [isSlidesContainerVisible, CarouselContainerRef] =
 		useIntersectionObserver<HTMLElement>({ threshold: 0.7 });
-	const CarouselDotsContainerRef = useRef<HTMLDivElement>(null);
+	// const CarouselDotsContainerRef = useRef<HTMLDivElement>(null);
 	const [CarouselDotsContainerStyles] = useState<React.CSSProperties>(
 		setCarouselDotsContainerStyles
 	);
@@ -386,6 +404,7 @@ function Carousel({
 								className: existingClassNames
 									? `${existingClassNames} ${CssStyles["slide-media-picture-tag"]}`
 									: CssStyles["slide-media-picture-tag"],
+								draggable: "false",
 							},
 							grandchildren
 						);
@@ -477,22 +496,21 @@ function Carousel({
 				return;
 
 			const slidesContainer = slidesContainerRef.current;
-			const slideDimensions = (
-				slidesContainer.firstElementChild as HTMLElement
-			).getBoundingClientRect();
-			//if isVertical --> slideHeight else slideWidth
+			let slideDimensions: DOMRect;
 			let slideWidthOrHeight: number;
-			isVertical
-				? (slideWidthOrHeight = slideDimensions.height)
-				: (slideWidthOrHeight = slideDimensions.width);
-
+			let transformBy = -1;
 			const stackAnimationTrue =
 				AnimationOptions?.AnimationType === "stack";
-			// const transformBy = 100 * slideNo; //percentage
-			let transformBy: number;
-			if (stackAnimationTrue) {
-				transformBy = 100 * slideNo; // percentage
-			} else {
+
+			if (!stackAnimationTrue) {
+				slideDimensions = (
+					slidesContainer.firstElementChild as HTMLElement
+				).getBoundingClientRect();
+				//if isVertical --> slideHeight else slideWidth
+				isVertical
+					? (slideWidthOrHeight = slideDimensions.height)
+					: (slideWidthOrHeight = slideDimensions.width);
+
 				transformBy =
 					(slideWidthOrHeight + gapBetweenSlidesInPixels.current) *
 					slideNo;
@@ -511,27 +529,27 @@ function Carousel({
 			let matrix: DOMMatrix;
 
 			//setting up carousel dots animation if specified
-			let carouselDotsContainerAnimation: null | Animation = null;
-			if (CarouselDots.AutoHideAfterTransition) {
-				carouselDotsContainerAnimation =
-					CarouselDotsContainerRef.current
-						? CarouselDotsContainerRef.current.animate(
-								{
-									opacity: [0, 1, 1, 0],
-									offset: [0, 0.3, 0.6, 1],
-								},
-								{
-									duration:
-										carouselAnimationOptions.current
-											.duration,
-									fill: "both",
-								}
-						  )
-						: null;
-			}
+			// let carouselDotsContainerAnimation: null | Animation = null;
+			// if (CarouselDots.AutoHideAfterTransition) {
+			// 	carouselDotsContainerAnimation =
+			// 		CarouselDotsContainerRef.current
+			// 			? CarouselDotsContainerRef.current.animate(
+			// 					{
+			// 						opacity: [0, 1, 1, 0],
+			// 						offset: [0, 0.3, 0.6, 1],
+			// 					},
+			// 					{
+			// 						duration:
+			// 							carouselAnimationOptions.current
+			// 								.duration,
+			// 						fill: "both",
+			// 					}
+			// 			  )
+			// 			: null;
+			// }
 
-			if (carouselDotsContainerAnimation)
-				carouselDotsContainerAnimation.pause();
+			// if (carouselDotsContainerAnimation)
+			// 	carouselDotsContainerAnimation.pause();
 
 			// if AnimationOptions.AnimationType === "stack"
 			if (stackAnimationTrue) {
@@ -555,10 +573,13 @@ function Carousel({
 					const anim = slideToAnimate.animate(
 						{
 							transform: isVertical
-								? [`translateY(${matrix.f}px)`, "translateY(0)"]
+								? [
+										`translateY(${matrix.f}px)`,
+										`translateY(0px)`,
+								  ]
 								: [
 										`translateX(${matrix.e}px)`,
-										"translateX(0)",
+										`translateX(0px)`,
 								  ],
 						},
 						timingOptions
@@ -589,7 +610,7 @@ function Carousel({
 						anim.cancel();
 					};
 					// else if prevSlideNo > slideNo
-				} else {
+				} else if (prevSlideNum > slideNo) {
 					const slideToAnimate =
 						slides[prevSlideNum].tagName.toLowerCase() === "picture"
 							? (slides[prevSlideNum].querySelector(
@@ -636,6 +657,8 @@ function Carousel({
 						);
 				}
 			} else {
+				//if assigned, transformBy will never be negative
+				if (transformBy === -1) return;
 				matrix = new DOMMatrix(
 					getComputedStyle(slidesContainer).transform
 				);
@@ -644,21 +667,25 @@ function Carousel({
 						{
 							transform: isVertical
 								? [
-										`translate(${matrix.e}px,${matrix.f}px)`,
-										`translate(0,-${transformBy}px)`,
+										// `translate(${matrix.e}px,${matrix.f}px)`,
+										`translateY(${matrix.f}px)`,
+										// `translate(0,-${transformBy}px)`
+										`translateY(-${transformBy}px)`,
 								  ]
 								: [
-										`translate(${matrix.e}px,${matrix.f}px)`,
-										`translate(-${transformBy}px,0)`,
+										// `translate(${matrix.e}px,${matrix.f}px)`,
+										`translateX(${matrix.e}px)`,
+										// `translate(-${transformBy}px,0)`
+										`translateX(-${transformBy}px)`,
 								  ],
 						},
 						timingOptions
 					);
 			}
 
-			if (carouselDotsContainerAnimation) {
-				carouselDotsContainerAnimation.play();
-			}
+			// if (carouselDotsContainerAnimation) {
+			// 	carouselDotsContainerAnimation.play();
+			// }
 
 			if (!transitionSlidesOnChangingSlideNoAnimation.current) return;
 
@@ -672,7 +699,7 @@ function Carousel({
 		},
 		[
 			AnimationOptions?.AnimationType,
-			CarouselDots.AutoHideAfterTransition,
+			// CarouselDots.AutoHideAfterTransition,
 			isVertical,
 			prevSlideNo,
 		]
@@ -847,12 +874,14 @@ function Carousel({
 
 			slideToAnimate = null;
 
-			prevTranslatedAmount = new DOMMatrix(
-				getComputedStyle(slidesContainer).transform
-			);
+			if (AnimationOptions?.AnimationType !== "stack") {
+				prevTranslatedAmount = new DOMMatrix(
+					getComputedStyle(slidesContainer).transform
+				);
 
-			prevX = prevTranslatedAmount.e;
-			prevY = prevTranslatedAmount.f;
+				prevX = prevTranslatedAmount.e;
+				prevY = prevTranslatedAmount.f;
+			}
 
 			startPosX = e.clientX;
 			startPosY = e.clientY;
@@ -874,13 +903,14 @@ function Carousel({
 			if (shouldExecute) {
 				//delete the animation instance on next invocation so
 				//as to avoid racking up many instances
-				if (animation) {
-					animation.finish();
-					animation.cancel();
-				}
+				// if (animation) {
+				// 	animation.finish();
+				// 	animation.cancel();
+				// }
 				let diff: number;
 				let translateAmount: number;
 				if (moveDirectionAxis === "x") {
+					if (isVertical) return;
 					//only read movement along the x-axis
 					diff = startPosX - e.clientX;
 
@@ -908,8 +938,8 @@ function Carousel({
 					const keyframesObject = {
 						//only animate in the direction the user is dragging the slides
 						transform: [
-							`translate(${prevX}px,${prevY}px)`,
-							`translate(${translateAmount}px,${prevY}px)`,
+							`translateX(${prevX}px)`,
+							`translateX(${translateAmount}px)`,
 						],
 					} as PropertyIndexedKeyframes;
 
@@ -927,6 +957,7 @@ function Carousel({
 
 					prevX = translateAmount;
 				} else {
+					if (!isVertical) return;
 					//only read movement along the y-axis
 					diff = startPosY - e.clientY;
 
@@ -950,8 +981,8 @@ function Carousel({
 
 					const keyframesObject = {
 						transform: [
-							`translate(${prevX}px,${prevY}px)`,
-							`translate(${prevX}px,${translateAmount}px)`,
+							`translateY(${prevY}px)`,
+							`translateY(${translateAmount}px)`,
 						],
 					} as PropertyIndexedKeyframes;
 					if (slideToAnimate) {
@@ -973,15 +1004,14 @@ function Carousel({
 			if (secondInstance) {
 				if (!(AnimationOptions?.AnimationType === "stack")) {
 					secondInstance = false;
+					shouldExecute = true;
 					return;
 				}
 
-				if (moveDirectionAxis === "x") {
+				if (moveDirectionAxis === "x" && !isVertical) {
 					moveDirection =
 						startPosX - e.clientX < 0 ? "right" : "left";
 
-					//get which slide to animate using setState to get
-					//currState value
 					const slides = Array.from(
 						slidesContainer.children
 					) as HTMLElement[];
@@ -995,6 +1025,9 @@ function Carousel({
 							return;
 						}
 						//if movement towards the left, animate subsequent slide
+						//
+						//if slideToAnimate is a picture tag,then apply styles to
+						//the img tag inside it
 						slideToAnimate =
 							slides[currSlideNo + 1].tagName.toLowerCase() ===
 							"picture"
@@ -1008,6 +1041,9 @@ function Carousel({
 							return;
 						}
 						//if movement towards the right, animate current slide
+						//
+						//if slideToAnimate is a picture tag,then apply styles to
+						//the img tag inside it
 						slideToAnimate =
 							slides[currSlideNo].tagName.toLowerCase() ===
 							"picture"
@@ -1025,11 +1061,9 @@ function Carousel({
 						prevY = prevTranslatedAmount.f;
 						// console.log(prevX, prevY);
 					}
-				} else {
+				} else if (moveDirectionAxis === "y" && isVertical) {
 					moveDirection = startPosY - e.clientY < 0 ? "down" : "up";
 
-					//get which slide to animate using setState to get
-					//currState value
 					const slides = Array.from(
 						slidesContainer.children
 					) as HTMLElement[];
@@ -1041,11 +1075,29 @@ function Carousel({
 						moveDirection === "up" &&
 						currSlideNo !== slides.length - 1
 					) {
-						//if movement towards the left, animate subsequent slide
-						slideToAnimate = slides[currSlideNo + 1];
+						//if movement is upwards, animate subsequent slide
+						//
+						//if slideToAnimate is a picture tag,then apply styles to
+						//the img tag inside it
+						slideToAnimate =
+							slides[currSlideNo + 1].tagName.toLowerCase() ===
+							"picture"
+								? (slides[currSlideNo + 1].querySelector(
+										"img"
+								  ) as HTMLElement)
+								: slides[currSlideNo + 1];
 					} else if (moveDirection === "down" && currSlideNo !== 0) {
-						//if movement towards the right, animate current slide
-						slideToAnimate = slides[currSlideNo];
+						//if movement is downwards, animate current slide
+						//
+						//if slideToAnimate is a picture tag,then apply styles to
+						//the img tag inside it
+						slideToAnimate =
+							slides[currSlideNo].tagName.toLowerCase() ===
+							"picture"
+								? (slides[currSlideNo].querySelector(
+										"img"
+								  ) as HTMLElement)
+								: slides[currSlideNo];
 					}
 
 					if (slideToAnimate) {
@@ -1055,6 +1107,9 @@ function Carousel({
 						prevX = prevTranslatedAmount.e;
 						prevY = prevTranslatedAmount.f;
 					}
+				} else {
+					secondInstance = false;
+					return;
 				}
 				secondInstance = false;
 				shouldExecute = true;
@@ -1090,8 +1145,10 @@ function Carousel({
 				: (diff = startPosX - e.clientX);
 			const threshold = 100;
 
-			if (diff === 0) return;
-
+			// if (diff === 0) return;
+			if (!diff) return;
+			if (isVertical && moveDirectionAxis === "x") return;
+			if (!isVertical && moveDirectionAxis === "y") return;
 			//if user drags along the x-axis and carousel is vertical OR
 			// vice versa OR
 			// diff < threshold --> animate the carousel slide back to the initial position (same slideNo)
@@ -1109,14 +1166,13 @@ function Carousel({
 						case "left":
 							translateTo = `translate(100%,0)`;
 							break;
+						case "up":
+							translateTo = "translate(0,100%)";
+							break;
 						case "right":
-							translateTo = "translate(0,0)";
-							break;
 						case "down":
-							translateTo = "translate(0,0)";
-							break;
 						default:
-							translateTo = "translate(100%,0)";
+							translateTo = "translate(0,0)";
 							break;
 					}
 
@@ -1129,20 +1185,29 @@ function Carousel({
 						},
 						timingOptions
 					);
+
+					animation.onfinish = function onAnimFin() {
+						animation.commitStyles();
+						animation.cancel();
+					};
 				} else {
 					setSlideNo((currSlideNo) => {
 						changeSlide(currSlideNo);
 						return currSlideNo;
 					});
+					if (animation) animation.cancel();
 				}
 			} else {
 				// if (diff > 0 && Math.abs(diff) > threshold) {
 				if (diff > 0) {
 					IncrementOrDecrementSlideNo("increment");
 					// } else if (diff < 0 && Math.abs(diff) > threshold) {
-				} else {
+				} else if (diff < 0) {
+					// explicit check since diff can be potentially undefined
 					IncrementOrDecrementSlideNo("decrement");
 				}
+
+				if (animation) animation.cancel();
 			}
 		};
 
@@ -1374,7 +1439,11 @@ function Carousel({
 	return (
 		<section
 			style={carouselContainerStyles}
-			className={CssStyles["carousel-container"]}
+			className={
+				className
+					? `${className} ${CssStyles["carousel-container"]}`
+					: CssStyles["carousel-container"]
+			}
 			ref={CarouselContainerRef}
 		>
 			<div
@@ -1539,4 +1608,11 @@ function memoCompareFunction(
 	return true;
 }
 
-export default memo(Carousel, memoCompareFunction);
+const CarouselMemo = memo(Carousel, memoCompareFunction);
+Object.defineProperty(CarouselMemo, "name", {
+	value: "CarouselMemo",
+	writable: true,
+	configurable: true,
+});
+// export default memo(Carousel, memoCompareFunction);
+export default CarouselMemo;

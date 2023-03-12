@@ -1,4 +1,5 @@
 const { mergeWithRules } = require("webpack-merge"),
+	miniCssExtractPlugin = require("mini-css-extract-plugin"),
 	commonConfig = require("./webpack.config.common"),
 	path = require("path");
 
@@ -13,15 +14,9 @@ const devConfig = {
 		open: true,
 		hot: true,
 	},
+	plugins: [new miniCssExtractPlugin()],
 };
 
 module.exports = mergeWithRules({
-	module: {
-		rules: {
-			test: "match",
-			use: "append",
-		},
-	},
+	plugins: "append",
 })(commonConfig, devConfig);
-
-// console.log(config.module.rules);
