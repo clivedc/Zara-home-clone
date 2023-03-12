@@ -1,8 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import Carousel, {
-	CarouselOptionsType,
-	CarouselDotsBaseType,
-} from "../Carousel/Carousel";
+import Carousel, { CarouselOptionsType } from "../Carousel/Carousel";
 import {
 	setVerticalCarouselLastSlide,
 	setVerticalCarouselDotsWithLabels,
@@ -21,22 +18,37 @@ interface HomePropsType {
 const Home = ({ category, setCategory, setHeaderLogoColor }: HomePropsType) => {
 	//state variables------------------------------------------------------------------
 
-	const [activeSlideNoWOMAN, setActiveSlideNoWOMAN] = useState<
-		number | undefined
-	>(undefined);
-	const [activeSlideNoMAN, setActiveSlideNoMAN] = useState<
-		number | undefined
-	>(undefined);
-	const [activeSlideNoKIDS, setActiveSlideNoKIDS] = useState<
-		number | undefined
-	>(undefined);
+	const [setSlideNoWOMAN, set_setSlideNoWOMAN] = useState<number | undefined>(
+		undefined
+	);
+	const [setSlideNoMAN, set_setSlideNoMAN] = useState<number | undefined>(
+		undefined
+	);
+	const [setSlideNoKIDS, set_setSlideNoKIDS] = useState<number | undefined>(
+		undefined
+	);
+
+	const [
+		verticalCarouselWOMANLastSlideActive,
+		setVerticalCarouselWOMANLastSlideActive,
+	] = useState<boolean>(false);
+	const [
+		verticalCarouselMANLastSlideActive,
+		setVerticalCarouselMANLastSlideActive,
+	] = useState<boolean>(false);
+	const [
+		verticalCarouselKIDSLastSlideActive,
+		setVerticalCarouselKIDSLastSlideActive,
+	] = useState<boolean>(false);
 
 	const [verticalCarouselLastSlide] = useState<JSX.Element>(
 		setVerticalCarouselLastSlide
 	);
-	const [verticalCarouselDotsWithLabels] = useState(
-		setVerticalCarouselDotsWithLabels
-	);
+	const [verticalCarouselDotsWithLabels] = useState<{
+		Woman: string[];
+		Man: string[];
+		Kids: string[];
+	}>(setVerticalCarouselDotsWithLabels);
 
 	const horizontalCarouselOptions: CarouselOptionsType = useMemo(() => {
 		return {
@@ -89,21 +101,21 @@ const Home = ({ category, setCategory, setHeaderLogoColor }: HomePropsType) => {
 		if (!category) return;
 
 		if (category === "woman") {
-			setActiveSlideNoWOMAN(() => {
+			set_setSlideNoWOMAN(() => {
 				//force change even when state value is the same
-				queueMicrotask(() => setActiveSlideNoWOMAN(0));
+				queueMicrotask(() => set_setSlideNoWOMAN(0));
 				return undefined;
 			});
 		} else if (category === "man") {
-			setActiveSlideNoMAN(() => {
+			set_setSlideNoMAN(() => {
 				//force change even when state value is the same
-				queueMicrotask(() => setActiveSlideNoMAN(0));
+				queueMicrotask(() => set_setSlideNoMAN(0));
 				return undefined;
 			});
 		} else {
-			setActiveSlideNoKIDS(() => {
+			set_setSlideNoKIDS(() => {
 				//force change even when state value is the same
-				queueMicrotask(() => setActiveSlideNoKIDS(0));
+				queueMicrotask(() => set_setSlideNoKIDS(0));
 				return undefined;
 			});
 		}
@@ -120,6 +132,18 @@ const Home = ({ category, setCategory, setHeaderLogoColor }: HomePropsType) => {
 		[setCategory]
 	);
 
+	const executeOnVerticalCarouselActiveSlide = useCallback(
+		(
+			setState: React.Dispatch<React.SetStateAction<boolean>>,
+			lastSlideNo: number
+		) =>
+			function executeOnVerticalCarouselActiveSlide(slideNo: number) {
+				if (slideNo === lastSlideNo) setState(true);
+				else setState(false);
+			},
+		[]
+	);
+
 	//----------------------------------------------------------------------------------------------------------
 
 	return (
@@ -133,10 +157,15 @@ const Home = ({ category, setCategory, setHeaderLogoColor }: HomePropsType) => {
 			<Carousel
 				{...verticalCarouselOptions}
 				CarouselDots={{
-					...(verticalCarouselOptions.CarouselDots as CarouselDotsBaseType),
+					...verticalCarouselOptions.CarouselDots,
 					label: verticalCarouselDotsWithLabels.Woman,
+					isTrue: !verticalCarouselWOMANLastSlideActive,
 				}}
-				setActiveSlide={activeSlideNoWOMAN}
+				setActiveSlide={setSlideNoWOMAN}
+				executeOnActiveSlide={executeOnVerticalCarouselActiveSlide(
+					setVerticalCarouselWOMANLastSlideActive,
+					verticalCarouselDotsWithLabels.Woman.length - 1
+				)}
 			>
 				<picture>
 					<source
@@ -353,10 +382,15 @@ const Home = ({ category, setCategory, setHeaderLogoColor }: HomePropsType) => {
 			<Carousel
 				{...verticalCarouselOptions}
 				CarouselDots={{
-					...(verticalCarouselOptions.CarouselDots as CarouselDotsBaseType),
+					...verticalCarouselOptions.CarouselDots,
 					label: verticalCarouselDotsWithLabels.Man,
+					isTrue: !verticalCarouselMANLastSlideActive,
 				}}
-				setActiveSlide={activeSlideNoMAN}
+				setActiveSlide={setSlideNoMAN}
+				executeOnActiveSlide={executeOnVerticalCarouselActiveSlide(
+					setVerticalCarouselMANLastSlideActive,
+					verticalCarouselDotsWithLabels.Man.length - 1
+				)}
 			>
 				<picture>
 					<source
@@ -539,10 +573,15 @@ const Home = ({ category, setCategory, setHeaderLogoColor }: HomePropsType) => {
 			<Carousel
 				{...verticalCarouselOptions}
 				CarouselDots={{
-					...(verticalCarouselOptions.CarouselDots as CarouselDotsBaseType),
+					...verticalCarouselOptions.CarouselDots,
 					label: verticalCarouselDotsWithLabels.Kids,
+					isTrue: !verticalCarouselKIDSLastSlideActive,
 				}}
-				setActiveSlide={activeSlideNoKIDS}
+				setActiveSlide={setSlideNoKIDS}
+				executeOnActiveSlide={executeOnVerticalCarouselActiveSlide(
+					setVerticalCarouselKIDSLastSlideActive,
+					verticalCarouselDotsWithLabels.Kids.length - 1
+				)}
 			>
 				{/* --------------------------------------- video ------------------------------------------------- */}
 				<Video

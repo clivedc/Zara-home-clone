@@ -125,14 +125,14 @@ const Header = ({
 							height="30"
 							width="15"
 							className="hamburger-icon"
-							viewBox="10 10 22 32"
+							viewBox="5 5 23 32"
 							xmlns="http://www.w3.org/2000/svg"
 							fill={headerLogoColor}
 						>
 							<path
 								d="M6 36v-3h36v3Zm0-10.5v-3h36v3ZM6 15v-3h36v3Z"
 								stroke="white"
-								strokeWidth="1.2"
+								strokeWidth="0.6"
 							/>
 						</svg>
 					</button>
