@@ -46,6 +46,7 @@
 .slide-media-picture-tag,
 .slide-media-Video-component-container {
 	grid-area: var(--grid-area-name-for-children);
+	user-select: none;
 }
 
 .slide-media-img {
@@ -53,11 +54,13 @@
 	width: 100%;
 	height: 100%;
 	grid-area: var(--grid-area-name-for-children);
+	user-select: none;
 }
 
 .slide-media-video {
 	/* display: block; */
 	/* margin: auto; */
+	user-select: none;
 	object-fit: cover;
 	max-width: 100%;
 	height: 100%;

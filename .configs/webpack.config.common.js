@@ -2,8 +2,7 @@ const path = require("path"),
 	miniCssExtractPlugin = require("mini-css-extract-plugin"),
 	forkTsCheckerWebpackPlugin = require("fork-ts-checker-webpack-plugin"),
 	htmlWebpackPlugin = require("html-webpack-plugin"),
-	ImageMinimizerPlugin = require("image-minimizer-webpack-plugin"),
-	devMode = process.env.NODE_ENV !== "production";
+	ImageMinimizerPlugin = require("image-minimizer-webpack-plugin");
 
 module.exports = {
 	entry: "./src/index.tsx",
@@ -74,9 +73,6 @@ module.exports = {
 			title: "Zara-Home-Clone",
 			template: "src/template.html",
 		}),
-		new miniCssExtractPlugin({
-			filename: devMode ? "[name].css" : "[name].[contenthash].css",
-		}),
 		new forkTsCheckerWebpackPlugin(),
 	],
 	optimization: {
@@ -95,7 +91,7 @@ module.exports = {
 				generator: [
 					{
 						preset: "webp",
-						filename: "resources/images/[name]][ext]",
+						filename: "resources/images/[name][ext]",
 						implementation: ImageMinimizerPlugin.sharpGenerate,
 						options: {
 							encodeOptions: {
