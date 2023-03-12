@@ -23,15 +23,15 @@ export type CarouselDotsContainerPositionType =
 	| `${VerticalAlignment}-${HorizontalAlignment}-${VerticalOrHorizontal}`
 	| `${VerticalAlignment}-centre`;
 
-export type CarouselDotsBaseType =
-	| {
-			isTrue: true;
-			CarouselDotsContainerPosition: CarouselDotsContainerPositionType;
-	  }
-	| {
-			isTrue: false;
-			CarouselDotsContainerPosition?: never;
-	  };
+// export type CarouselDotsBaseType =
+// 	| {
+// 			isTrue: true;
+// 			CarouselDotsContainerPosition: CarouselDotsContainerPositionType;
+// 	  }
+// 	| {
+// 			isTrue: false;
+// 			CarouselDotsContainerPosition?: never;
+// 	  };
 
 export interface CarouselOptionsType {
 	CarouselContainerStyles?: React.CSSProperties; //container of the slides track, different from slidesContainer
@@ -39,7 +39,9 @@ export interface CarouselOptionsType {
 		isTrue: boolean;
 		label?: string[];
 	};
-	CarouselDots?: CarouselDotsBaseType & {
+	CarouselDots?: {
+		isTrue: boolean;
+		CarouselDotsContainerPosition?: CarouselDotsContainerPositionType;
 		AutoHideAfterTransition?: boolean;
 		// CarouselDotsElement?: typeof RadioGroup;
 		CarouselDotsAdditionalStyles?: React.CSSProperties;
@@ -1071,10 +1073,11 @@ function Carousel({
 						slidesContainer.getAttribute("data-active-slide")
 					);
 
-					if (
-						moveDirection === "up" &&
-						currSlideNo !== slides.length - 1
-					) {
+					if (moveDirection === "up") {
+						if (currSlideNo === slides.length - 1) {
+							secondInstance = false;
+							return;
+						}
 						//if movement is upwards, animate subsequent slide
 						//
 						//if slideToAnimate is a picture tag,then apply styles to
@@ -1086,7 +1089,12 @@ function Carousel({
 										"img"
 								  ) as HTMLElement)
 								: slides[currSlideNo + 1];
-					} else if (moveDirection === "down" && currSlideNo !== 0) {
+					} else if (moveDirection === "down") {
+						if (currSlideNo === 0) {
+							secondInstance = false;
+							return;
+						}
+						console.log("first");
 						//if movement is downwards, animate current slide
 						//
 						//if slideToAnimate is a picture tag,then apply styles to
@@ -1137,6 +1145,7 @@ function Carousel({
 
 			//resetting values used in pointer move handler
 			firstInstance = true;
+			secondInstance = false;
 			shouldExecute = false;
 
 			let diff: number;
@@ -1145,22 +1154,14 @@ function Carousel({
 				: (diff = startPosX - e.clientX);
 			const threshold = 100;
 
-			// if (diff === 0) return;
 			if (!diff) return;
 			if (isVertical && moveDirectionAxis === "x") return;
 			if (!isVertical && moveDirectionAxis === "y") return;
 			//if user drags along the x-axis and carousel is vertical OR
 			// vice versa OR
 			// diff < threshold --> animate the carousel slide back to the initial position (same slideNo)
-			if (
-				// (isVertical && moveDirection === "x") ||
-				// (!isVertical && moveDirection === "y") ||
-				Math.abs(diff) < threshold
-			) {
+			if (Math.abs(diff) < threshold) {
 				if (slideToAnimate) {
-					// const prevTranslatedVal = new DOMMatrix(
-					// 	getComputedStyle(slideToAnimate).transform
-					// );
 					let translateTo: string;
 					switch (moveDirection) {
 						case "left":
@@ -1198,10 +1199,8 @@ function Carousel({
 					if (animation) animation.cancel();
 				}
 			} else {
-				// if (diff > 0 && Math.abs(diff) > threshold) {
 				if (diff > 0) {
 					IncrementOrDecrementSlideNo("increment");
-					// } else if (diff < 0 && Math.abs(diff) > threshold) {
 				} else if (diff < 0) {
 					// explicit check since diff can be potentially undefined
 					IncrementOrDecrementSlideNo("decrement");
@@ -1597,6 +1596,7 @@ function memoCompareFunction(
 	nextProps: CarouselPropsType
 ) {
 	if (
+		prevProps.CarouselDots?.isTrue !== nextProps.CarouselDots?.isTrue ||
 		prevProps.AutoSlideChange?.isTrue !==
 			nextProps.AutoSlideChange?.isTrue ||
 		(nextProps.setActiveSlide !== undefined &&
