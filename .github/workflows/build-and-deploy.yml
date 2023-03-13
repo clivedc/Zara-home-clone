@@ -78,7 +78,7 @@ jobs:
                   git checkout -t origin/gh-pages
                   echo
                   echo 'Cleaning gh-pages branch'
-                  rm -rf --verbose *
+                  find * -not -name 'node_modules' -delete
                   echo
                   echo 'Copying build files from main branch'
                   git checkout main -- build
@@ -96,7 +96,7 @@ jobs:
                   echo The 'git add' command exited with exit status $?
                   echo
                   echo 'Commiting changes locally'
-                  CHANGES_TO_COMMIT=$( git status )
+                  CHANGES_TO_COMMIT_TO_GH-PAGES=$( git status )
                   if [[ $CHANGES_TO_COMMIT_TO_GH-PAGES =~ "nothing to commit" ]]; then echo $CHANGES_TO_COMMIT_TO_GH-PAGES; SHOULD_PUSH_TO_GH-PAGES=false; else git commit -m "Compiled new build files"; fi
                   echo
                   echo "Printing the value of env variable, SHOULD_PUSH_TO_GH-PAGES: $SHOULD_PUSH_TO_GH-PAGES"
@@ -104,9 +104,9 @@ jobs:
                   echo
                   echo 'Switching back to main branch so that node_modules can be cached'
                   git switch main
-                  echo "Check if node_modules is present"
-                  ls node_modules
-                  if [ $? -eq 2 ]; then npm install; fi
+                  echo
+                  NODE_DIR=$( ls node_modules )
+                  if [ $? -eq 1 ]; then echo node_modules exists; else echo 'Copying node_modules from main branch'; git checkout main -- node_modules; fi 
 
     
     # Upload Build files
