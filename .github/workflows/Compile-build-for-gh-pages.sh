@@ -2,6 +2,7 @@
                   export CHANGES_TO_COMMIT_TO_MAIN=true
                   export CHANGES_TO_COMMIT_TO_GH_PAGES=true
                   export SHOULD_PUSH_TO_GH_PAGES
+                  echo 'Running build process'
                   npm run build
                   echo
                   git fetch --prune
@@ -21,26 +22,32 @@
                   echo
                   # Cleaning current directory
                   echo 'Cleaning gh-pages branch'
+                  echo 'Listing all files and directories before cleanup'
+                  ls
+                  echo ""
                   rm -rf *
-                  echo All files and directories deleted
+                  echo 'All files and directories deleted'
+                  echo 'Listing all files and directories after cleanup'
+                  ls
+                  echo "The 'ls' command exited with exit status $?"
                   echo
                   # Copying build files from main branch
                   echo 'Copying build files from main branch'
                   git checkout main -- build
                   # Moving build files from build folder to root directory so that github pages can access the index.html file
-                  echo 'Moving all files in build directory to root directory, ${{ github.workspace }}'
+                  echo "Moving all files in build directory to root directory, ${{ github.workspace }}"
                   git mv build/* ./
                   echo 'Removing empty build folder'
                   # Deleting empty build folder
                   rmdir -v build
                   echo
-                  echo 'Listing all files in current directory, ${{ github.workspace }}'
+                  echo "Listing all files in current directory, ${{ github.workspace }}"
                   ls
                   echo
                   echo 'Commit and push the changes to the gh-pages branch in the repo'
                   echo 'Adding files to staging area'
                   git add .
-                  echo The 'git add' command exited with 'exit' status $?
+                  echo "The 'git add' command exited with exit status $?"
                   echo
                   echo 'Commiting changes locally'
                   # Check whether commit is necessary
@@ -52,8 +59,6 @@
                        SHOULD_PUSH_TO_GH_PAGES=false; 
                   else git commit -m "Compiled new build files"; 
                   fi
-                  echo
-                  echo "Printing the value of env variable, SHOULD_PUSH_TO_GH-PAGES: $SHOULD_PUSH_TO_GH_PAGES"
                   # Check whether push is necessary
                   if [ $SHOULD_PUSH_TO_GH_PAGES = true ]; 
                   then echo 'Pushing changes to repo'; 
