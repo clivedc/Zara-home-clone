@@ -61,50 +61,13 @@ jobs:
               
             # Compile build files and push the commit to the 'gh-pages' branch of the repo
             - name: Build files and commit to branch 'gh-pages' of repo
+              run: ./github/workflows/Compile-build-for-gh-pages.sh
+                  
+            - if: steps.cache-node_modules.outputs.cache-hit != true
+              name: Switch to main branch to cache node_modules
               env:
-                SHOULD_PUSH_TO_GH-PAGES: true
-                CHANGES_TO_COMMIT_TO_MAIN: true
-                CHANGES_TO_COMMIT_TO_GH_PAGES: true
                 NODE_MODULES_IS_PRESENT: true
               run: |
-                  npm run build
-                  echo
-                  git fetch --prune
-                  git config user.email 'clive.dcosta98@gmail.com'
-                  git config user.name 'clivedc'
-                  git add .
-                  CHANGES_TO_COMMIT_TO_MAIN=$( git status )
-                  if [[ "$CHANGES_TO_COMMIT_TO_MAIN" =~ "nothing to commit" ]]; then echo $CHANGES_TO_COMMIT_TO_MAIN; else git commit -m "Compiled new build files"; fi
-                  echo
-                  echo 'Checking out gh-pages branch'
-                  git checkout -t origin/gh-pages
-                  echo
-                  echo 'Cleaning gh-pages branch'
-                  rm -rf *
-                  echo All files and directories deleted
-                  echo
-                  echo 'Copying build files from main branch'
-                  git checkout main -- build
-                  echo 'Moving all files in build directory to root directory, ${{ github.workspace }}'
-                  git mv build/* ./
-                  echo 'Removing empty build folder'
-                  rmdir -v build
-                  echo
-                  echo 'Listing all files in current directory, ${{ github.workspace }}'
-                  ls
-                  echo
-                  echo 'Commit and push the changes to the gh-pages branch in the repo'
-                  echo 'Adding files to staging area'
-                  git add .
-                  echo The 'git add' command exited with exit status $?
-                  echo
-                  echo 'Commiting changes locally'
-                  CHANGES_TO_COMMIT_TO_GH_PAGES=$( git status )
-                  echo $CHANGES_TO_COMMIT_TO_GH_PAGES
-                  if [[ "$CHANGES_TO_COMMIT_TO_GH_PAGES" =~ "nothing to commit" ]]; then echo $CHANGES_TO_COMMIT_TO_GH_PAGES; SHOULD_PUSH_TO_GH_PAGES=false; else git commit -m "Compiled new build files"; fi
-                  echo
-                  echo "Printing the value of env variable, SHOULD_PUSH_TO_GH-PAGES: $SHOULD_PUSH_TO_GH_PAGES"
-                  if [ $SHOULD_PUSH_TO_GH_PAGES = true ]; then echo 'Pushing changes to repo'; git push origin gh-pages; else echo 'No changes to push'; fi
                   echo
                   echo 'Switching back to main branch so that node_modules can be cached'
                   git switch main
