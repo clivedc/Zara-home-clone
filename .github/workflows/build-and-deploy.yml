@@ -50,6 +50,8 @@ jobs:
                   npm run build
                   echo 'Checking out gh-pages branch'
                   git fetch --prune
+                  git config user.email 'clive.dcosta98@gmail.com'
+                  git config user.name 'clivedc'
                   git add .
                   git commit -m 'Compiled new build files'
                   git checkout -t origin/gh-pages
