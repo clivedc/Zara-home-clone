@@ -63,6 +63,7 @@ jobs:
             - name: Build files and commit to branch 'gh-pages' of repo
               env:
                 SHOULD_PUSH: true
+                CHANGES_TO_COMMIT: true
               run: |
                   npm run build
                   echo 'Checking out gh-pages branch'
@@ -90,7 +91,8 @@ jobs:
                   echo The 'git add' command exited with exit status $?
                   echo
                   echo 'Commiting changes locally'
-                  git commit -m "Compiled new build files"; if [ $? -eq 1 ]; then SHOULD_PUSH=false; fi
+                  CHANGES_TO_COMMIT=$( git commit -m "Compiled new build files" )
+                  if [[ $CHANGES_TO_COMMIT =~ "nothing to commit" ]]; then echo $CHANGES_TO_COMMIT; SHOULD_PUSH=false; fi
                   if [ $SHOULD_PUSH = true ]; then echo "The 'git commit' command exited with exit status 0"; else echo "The 'git commit' command exited with exit status 1, no changes to push"; fi
                   echo
                   echo "Printing the value of env variable, SHOULD_PUSH: $SHOULD_PUSH"
