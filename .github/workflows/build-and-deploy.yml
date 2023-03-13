@@ -91,9 +91,8 @@ jobs:
                   echo The 'git add' command exited with exit status $?
                   echo
                   echo 'Commiting changes locally'
-                  CHANGES_TO_COMMIT=$( git commit -m "Compiled new build files" )
-                  if [[ $CHANGES_TO_COMMIT =~ "nothing to commit" ]]; then echo $CHANGES_TO_COMMIT; SHOULD_PUSH=false; fi
-                  if [ $SHOULD_PUSH = true ]; then echo "The 'git commit' command exited with exit status 0"; else echo "The 'git commit' command exited with exit status 1, no changes to push"; fi
+                  CHANGES_TO_COMMIT=$( git status )
+                  if [[ $CHANGES_TO_COMMIT =~ "nothing to commit" ]]; then echo $CHANGES_TO_COMMIT; SHOULD_PUSH=false; else git commit -m "Compiled new build files"; fi
                   echo
                   echo "Printing the value of env variable, SHOULD_PUSH: $SHOULD_PUSH"
                   if [ $SHOULD_PUSH = true ]; then echo 'Pushing changes to repo'; git push origin gh-pages; fi
