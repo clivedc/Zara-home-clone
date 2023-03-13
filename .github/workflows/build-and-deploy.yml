@@ -110,7 +110,7 @@ jobs:
                   git switch main
                   echo
                   NODE_MODULES_IS_PRESENT=$( find * -type d -name 'node_modules' )
-                  if [ "$NODE_MODULES_IS_PRESENT" = "" ]; then echo 'Copying node_modules from main branch'; git fetch origin; git checkout main -- node_modules; else echo node_modules is present; fi 
+                  if [ "$NODE_MODULES_IS_PRESENT" = "" ]; then echo 'Installing dependencies'; npm install; else echo node_modules is present; fi 
 
     
     # Upload Build files
