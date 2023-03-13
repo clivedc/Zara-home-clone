@@ -80,7 +80,7 @@ jobs:
                   git checkout -t origin/gh-pages
                   echo
                   echo 'Cleaning gh-pages branch'
-                  git rm -rf *
+                  rm -rf *
                   echo All files and directories deleted
                   echo
                   echo 'Copying build files from main branch'
