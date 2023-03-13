@@ -64,10 +64,9 @@ jobs:
               env:
                 SHOULD_PUSH_TO_GH-PAGES: true
                 CHANGES_TO_COMMIT_TO_MAIN: true
-                CHANGES_TO_COMMIT_TO_GH-PAGES: true
+                CHANGES_TO_COMMIT_TO_GH_PAGES: true
+                NODE_MODULES_IS_PRESENT: true
               run: |
-                  echo $CHANGES_TO_COMMIT_TO_MAIN
-                  echo $CHANGES_TO_COMMIT_TO_GH-PAGES
                   npm run build
                   echo
                   git fetch --prune
@@ -80,11 +79,11 @@ jobs:
                   git checkout -t origin/gh-pages
                   echo
                   echo Checking for node_modules in gh-pages branch
-                  NODE_DIR=$( find * -type d -name 'node_modules' )
-                  if [ "$NODE_DIR" = "" ]; then echo node_modules is not present in gh-pages branch; else echo node_modules is present; fi
+                  NODE_MODULES_IS_PRESENT=$( find * -type d -name 'node_modules' )
+                  if [ "$NODE_MODULES_IS_PRESENT" = "" ]; then echo node_modules is not present in gh-pages branch; else echo node_modules is present; fi
                   echo
                   echo 'Cleaning gh-pages branch'
-                  find * | grep -ve 'node_modules' | xargs rm -rf
+                  find * | grep -ve 'node_modules' | xargs rm -rfv
                   echo
                   echo 'Copying build files from main branch'
                   git checkout main -- build
@@ -102,18 +101,16 @@ jobs:
                   echo The 'git add' command exited with exit status $?
                   echo
                   echo 'Commiting changes locally'
-                  echo $CHANGES_TO_COMMIT_TO_GH-PAGES
-                  CHANGES_TO_COMMIT_TO_GH-PAGES=$( git status )
-                  echo $?
-                  if [[ $CHANGES_TO_COMMIT_TO_GH-PAGES =~ "nothing to commit" ]]; then echo $CHANGES_TO_COMMIT_TO_GH-PAGES; SHOULD_PUSH_TO_GH-PAGES=false; else git commit -m "Compiled new build files"; fi
+                  CHANGES_TO_COMMIT_TO_GH_PAGES=$( git status )
+                  if [[ $CHANGES_TO_COMMIT_TO_GH_PAGES =~ "nothing to commit" ]]; then echo $CHANGES_TO_COMMIT_TO_GH_PAGES; SHOULD_PUSH_TO_GH_PAGES=false; else git commit -m "Compiled new build files"; fi
                   echo
-                  echo "Printing the value of env variable, SHOULD_PUSH_TO_GH-PAGES: $SHOULD_PUSH_TO_GH-PAGES"
-                  if [ $SHOULD_PUSH_TO_GH-PAGES = true ]; then echo 'Pushing changes to repo'; git push origin gh-pages; else echo 'No changes to push'; fi
+                  echo "Printing the value of env variable, SHOULD_PUSH_TO_GH-PAGES: $SHOULD_PUSH_TO_GH_PAGES"
+                  if [ $SHOULD_PUSH_TO_GH_PAGES = true ]; then echo 'Pushing changes to repo'; git push origin gh-pages; else echo 'No changes to push'; fi
                   echo
                   echo 'Switching back to main branch so that node_modules can be cached'
                   git switch main
                   echo
-                  if [ "$NODE_DIR" = "" ]; then echo 'Copying node_modules from main branch'; git checkout main -- node_modules; fi 
+                  if [ "$NODE_MODULES_IS_PRESENT" = "" ]; then echo 'Copying node_modules from main branch'; git checkout main -- node_modules; fi 
 
     
     # Upload Build files
