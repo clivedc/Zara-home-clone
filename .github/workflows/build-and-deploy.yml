@@ -61,12 +61,7 @@ jobs:
               
             # Compile build files and push the commit to the 'gh-pages' branch of the repo
             - name: Build files and commit to branch 'gh-pages' of repo
-              run: |
-                pwd
-                git branch
-                ls -a
-                find .github
-                ./github/workflows/Compile-build-for-gh-pages.sh
+              run: ./.github/workflows/Compile-build-for-gh-pages.sh
                   
             - if: steps.cache-node_modules.outputs.cache-hit != true
               name: Switch to main branch to cache node_modules
