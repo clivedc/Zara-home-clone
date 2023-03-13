@@ -77,10 +77,12 @@ jobs:
                   echo 'Checking out gh-pages branch'
                   git checkout -t origin/gh-pages
                   echo
+                  echo Checking for node_modules in gh-pages branch
+                  NODE_DIR=$( find * -type d -name 'node_modules' )
+                  if [ "$NODE_DIR" = "" ]; then echo node_modules is not present in gh-pages branch; else echo node_modules is present; fi
+                  echo
                   echo 'Cleaning gh-pages branch'
-                  NODE_DIR=$( ls node_modules )
-                  echo $?
-                  find * -not -name 'node_modules' -delete
+                  find * | grep -ve 'node_modules' | xargs rm -rf
                   echo
                   echo 'Copying build files from main branch'
                   git checkout main -- build
@@ -107,8 +109,7 @@ jobs:
                   echo 'Switching back to main branch so that node_modules can be cached'
                   git switch main
                   echo
-                  NODE_DIR=$( ls node_modules )
-                  if [ $? -eq 1 ]; then echo node_modules exists; else echo 'Copying node_modules from main branch'; git checkout main -- node_modules; fi 
+                  if [ "$NODE_DIR" != "" ]; then echo node_modules exists; else echo 'Copying node_modules from main branch'; git checkout main -- node_modules; fi 
 
     
     # Upload Build files
