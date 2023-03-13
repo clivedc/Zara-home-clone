@@ -100,8 +100,8 @@ jobs:
                   echo The 'git add' command exited with exit status $?
                   echo
                   echo 'Commiting changes locally'
-                  CHANGES_TO_COMMIT_TO_GH-PAGES=$( git status )
                   echo $CHANGES_TO_COMMIT_TO_GH-PAGES
+                  CHANGES_TO_COMMIT_TO_GH-PAGES=$( git status )
                   if [[ $CHANGES_TO_COMMIT_TO_GH-PAGES =~ "nothing to commit" ]]; then echo $CHANGES_TO_COMMIT_TO_GH-PAGES; SHOULD_PUSH_TO_GH-PAGES=false; else git commit -m "Compiled new build files"; fi
                   echo
                   echo "Printing the value of env variable, SHOULD_PUSH_TO_GH-PAGES: $SHOULD_PUSH_TO_GH-PAGES"
