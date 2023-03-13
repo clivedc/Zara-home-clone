@@ -51,7 +51,7 @@ jobs:
                 # A list of files, directories, and wildcard patterns to cache and restore
                 path: ./node_modules
                 # An explicit key for restoring and saving the cache
-                key: node_modules-cache--${{ hashfiles('package-lock.json') }}
+                key: node_modules-cache--${{ runner.os }}--${{ hashfiles('package-lock.json') }}
                 # An optional boolean when enabled, allows windows runners to save or restore caches that can be restored or saved respectively on other platforms
                 enableCrossOsArchive: false
 
