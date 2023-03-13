@@ -82,7 +82,9 @@ jobs:
                   ls
                   echo 'Commit and push the changes to the gh-pages branch in the repo'
                   git add .
+                  echo $?
                   git commit -m "Compiled new build files"
+                  echo $?
                   git push origin gh-pages
                   echo $?
 
