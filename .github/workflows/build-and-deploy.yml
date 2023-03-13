@@ -78,7 +78,8 @@ jobs:
                   git checkout -t origin/gh-pages
                   echo
                   echo 'Cleaning gh-pages branch'
-                  ls node_modules
+                  NODE_DIR=$( ls node_modules )
+                  echo $?
                   find * -not -name 'node_modules' -delete
                   echo
                   echo 'Copying build files from main branch'
