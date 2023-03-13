@@ -48,8 +48,9 @@ jobs:
             - name: Build files and commit to branch 'gh-pages' of repo
               run: |
                   npm run build
-                  echo 'Switching to gh-pages branch'
-                  git switch gh-pages
+                  echo 'Checking out gh-pages branch'
+                  git fetch --prune
+                  git checkout -t origin/gh-pages
                   echo 'Cleaning gh-pages branch'
                   rm -rf *
                   echo 'Copying build files from main branch'
