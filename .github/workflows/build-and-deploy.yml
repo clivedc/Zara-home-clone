@@ -102,7 +102,8 @@ jobs:
                   echo
                   echo 'Commiting changes locally'
                   CHANGES_TO_COMMIT_TO_GH_PAGES=$( git status )
-                  if [[ $CHANGES_TO_COMMIT_TO_GH_PAGES =~ "nothing to commit" ]]; then echo $CHANGES_TO_COMMIT_TO_GH_PAGES; SHOULD_PUSH_TO_GH_PAGES=false; else git commit -m "Compiled new build files"; fi
+                  echo $CHANGES_TO_COMMIT_TO_GH_PAGES
+                  if [[ "$CHANGES_TO_COMMIT_TO_GH_PAGES" =~ "nothing to commit" ]]; then echo $CHANGES_TO_COMMIT_TO_GH_PAGES; SHOULD_PUSH_TO_GH_PAGES=false; else git commit -m "Compiled new build files"; fi
                   echo
                   echo "Printing the value of env variable, SHOULD_PUSH_TO_GH-PAGES: $SHOULD_PUSH_TO_GH_PAGES"
                   if [ $SHOULD_PUSH_TO_GH_PAGES = true ]; then echo 'Pushing changes to repo'; git push origin gh-pages; else echo 'No changes to push'; fi
