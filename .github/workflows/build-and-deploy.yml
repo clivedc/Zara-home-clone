@@ -63,7 +63,7 @@ jobs:
             - name: Build files and commit to branch 'gh-pages' of repo
               run: |
                 pwd
-                ls
+                find .
                 echo ${{ github.workspace }}
                 ./github/workflows/Compile-build-for-gh-pages.sh
                   
