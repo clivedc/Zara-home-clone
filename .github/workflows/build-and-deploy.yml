@@ -61,6 +61,8 @@ jobs:
               
             # Compile build files and push the commit to the 'gh-pages' branch of the repo
             - name: Build files and commit to branch 'gh-pages' of repo
+              env:
+                SHOULD_PUSH: true
               run: |
                   npm run build
                   echo 'Checking out gh-pages branch'
@@ -78,18 +80,21 @@ jobs:
                   git mv build/* ./
                   echo 'Removing empty build folder'
                   rmdir build
+                  echo
                   echo 'Listing all files in current directory, ${{ github.workspace }}'
                   ls
+                  echo
                   echo 'Commit and push the changes to the gh-pages branch in the repo'
                   echo 'Adding files to staging area'
                   git add .
-                  echo $?
+                  echo The 'git add' command exited with exit status $?
+                  echo
                   echo 'Commiting changes locally'
-                  git commit -m "Compiled new build files"
-                  echo $?
-                  echo 'Pushing changes to repo'
-                  git push origin gh-pages
-                  echo $?
+                  git commit -m "Compiled new build files"; if [ $? -eq 1 ]; then SHOULD_PUSH=false; fi
+                  if [ $SHOULD_PUSH = true ]; then echo "The 'git commit' command exited with exit status 0"; else echo "The 'git commit' command exited with exit status 1, no changes to push"; fi
+                  echo
+                  echo "Printing the value of env variable, SHOULD_PUSH: $SHOULD_PUSH"
+                  if [ $SHOULD_PUSH = true ]; then echo 'Pushing changes to repo'; git push origin gh-pages; fi
 
     
     # Upload Build files
