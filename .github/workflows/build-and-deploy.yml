@@ -63,8 +63,9 @@ jobs:
             - name: Build files and commit to branch 'gh-pages' of repo
               run: |
                 pwd
-                find .
-                echo ${{ github.workspace }}
+                git branch
+                ls -a
+                find .github
                 ./github/workflows/Compile-build-for-gh-pages.sh
                   
             - if: steps.cache-node_modules.outputs.cache-hit != true
