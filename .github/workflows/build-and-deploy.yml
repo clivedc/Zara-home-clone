@@ -53,7 +53,7 @@ jobs:
                 # An explicit key for restoring and saving the cache
                 key: node_modules-cache--${{ hashfiles('package-lock.json') }}
                 # An optional boolean when enabled, allows windows runners to save or restore caches that can be restored or saved respectively on other platforms
-                enableCrossOsArchive: true
+                enableCrossOsArchive: false
 
             - name: Install dependencies
               if: steps.cache-node_modules.outputs.cache-hit != true
