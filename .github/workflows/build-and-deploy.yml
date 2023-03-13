@@ -8,7 +8,7 @@ on:
 jobs:
     # Build job
     build:
-        runs-on: ubuntu-latest
+        runs-on: ${{ matrix.os }}
 
         strategy:
             matrix:
@@ -27,39 +27,54 @@ jobs:
               uses: actions/setup-node@v3
               with:
                   node-version: ${{ matrix.node-version }}
+              
+            # Use cached dependencies if present, else cache dependencies if not present
+            - name: Caching dependencies
+              id: cache-node_modules
+              uses: actions/cache@v3.3.1
+              with:
+                # A list of files, directories, and wildcard patterns to cache and restore
+                path: ./node_modules
+                # An explicit key for restoring and saving the cache
+                key: node_modules-cache--${{ hashfiles('package-lock.json') }}
+                # An optional boolean when enabled, allows windows runners to save or restore caches that can be restored or saved respectively on other platforms
+                enableCrossOsArchive: true
 
-            - name: npm install and build
+            - name: Install dependencies
+              if: steps.cache-node_modules.outputs.cache-hit != true
+              run: npm install
+              
+            - name: Build the files that need to be deployed
+              run: npm run build
+              
+            - if: runner.os == "ubuntu-latest"  
+              name: checkout gh-pages branch and copy build files
               run: |
-                  npm install
-                  npm run build
-                  
-             
-    # Build and upload artifact
-    build-artifact:
-       needs: build
-       runs-on: ubuntu-latest
-       steps:
-        - uses: actions/checkout@v3
-        - name: checkout gh-pages branch and copy build files
-          run: |
-              echo ${{ github.workspace }}
-              git branch
-              git checkout -b gh-pages
-              git branch
-              rm -rf *
-              git checkout main -- build
-              git mv build/* ./
-              rmdir build
-              ls
-  
-        - name: Upload a Build Artifact
-          uses: actions/upload-pages-artifact@v1
-          with:
-            path: ./
+                  echo '${{ github.workspace }} , ${{ ~/ }}'
+                  git branch
+                  echo 'Create and checkout gh-pages branch'
+                  git checkout -b gh-pages
+                  git branch
+                  echo 'Cleaning gh-pages branch'
+                  rm -rf *
+                  echo 'Copying build files from main branch'
+                  git checkout main -- build
+                  echo 'Moving all files in build to root directory ${{ github.workspace }}'
+                  git mv build/* ./
+                  echo 'Removing empty build folder'
+                  rmdir build
+                  ls
+            
+            # Upload Build files
+            - if: runner.os == "ubuntu-latest"
+              name: Upload a Build Artifact
+              uses: actions/upload-pages-artifact@v1
+              with:
+                path: ./
 
     # Deploy job
     deploy:
-        needs: build-artifact
+        needs: build
 
         # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
         permissions:
