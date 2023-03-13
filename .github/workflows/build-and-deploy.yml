@@ -50,6 +50,8 @@ jobs:
                   npm run build
                   echo 'Checking out gh-pages branch'
                   git fetch --prune
+                  git add .
+                  git commit -m 'Compiled new build files'
                   git checkout -t origin/gh-pages
                   echo 'Cleaning gh-pages branch'
                   rm -rf *
