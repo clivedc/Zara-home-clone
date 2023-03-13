@@ -128,7 +128,7 @@ jobs:
 
     # Deploy job
     deploy:
-        needs: build
+        needs: build-and-upload-artifact
 
         # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
         permissions:
