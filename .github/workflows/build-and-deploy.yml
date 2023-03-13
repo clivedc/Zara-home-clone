@@ -84,6 +84,7 @@ jobs:
                   git add .
                   git commit -m "Compiled new build files"
                   git push origin gh-pages
+                  echo $?
 
     
     # Upload Build files
