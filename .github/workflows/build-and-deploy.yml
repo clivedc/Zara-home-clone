@@ -67,13 +67,13 @@ jobs:
                 CHANGES_TO_COMMIT_TO_GH-PAGES: true
               run: |
                   npm run build
-                  echo 'Checking out gh-pages branch'
+                  echo
                   git fetch --prune
                   git config user.email 'clive.dcosta98@gmail.com'
                   git config user.name 'clivedc'
                   git add .
                   CHANGES_TO_COMMIT_TO_MAIN=$( git status )
-                  if [[ $CHANGES_TO_COMMIT_TO_MAIN =~ "nothing to commit" ]]; then echo $CHANGES_TO_COMMIT_TO_MAIN; else git commit -m "Compiled new build files"; fi
+                  if [[ "$CHANGES_TO_COMMIT_TO_MAIN" =~ "nothing to commit" ]]; then echo $CHANGES_TO_COMMIT_TO_MAIN; else git commit -m "Compiled new build files"; fi
                   echo 'Checking out gh-pages branch'
                   git checkout -t origin/gh-pages
                   echo
@@ -109,7 +109,7 @@ jobs:
                   echo 'Switching back to main branch so that node_modules can be cached'
                   git switch main
                   echo
-                  if [ "$NODE_DIR" != "" ]; then echo node_modules exists; else echo 'Copying node_modules from main branch'; git checkout main -- node_modules; fi 
+                  if [ "$NODE_DIR" = "" ]; then echo 'Copying node_modules from main branch'; git checkout main -- node_modules; fi 
 
     
     # Upload Build files
