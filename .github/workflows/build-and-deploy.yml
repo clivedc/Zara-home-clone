@@ -44,33 +44,40 @@ jobs:
               if: steps.cache-node_modules.outputs.cache-hit != true
               run: npm install
               
-            - name: Build the files that need to be deployed
-              run: npm run build
-              
-            - if: runner.os == "ubuntu-latest"  
-              name: checkout gh-pages branch and copy build files
+            # Compile build files and push the commit to the 'gh-pages' branch of the repo
+            - name: Build files and commit to branch 'gh-pages' of repo
               run: |
-                  echo '${{ github.workspace }} , ${{ ~/ }}'
-                  git branch
-                  echo 'Create and checkout gh-pages branch'
-                  git checkout -b gh-pages
-                  git branch
+                  npm run build
+                  echo 'Switching to gh-pages branch'
+                  git switch gh-pages
                   echo 'Cleaning gh-pages branch'
                   rm -rf *
                   echo 'Copying build files from main branch'
                   git checkout main -- build
-                  echo 'Moving all files in build to root directory ${{ github.workspace }}'
+                  echo 'Moving all files in build directory to root directory, ${{ github.workspace }}'
                   git mv build/* ./
                   echo 'Removing empty build folder'
                   rmdir build
+                  echo 'Listing all files in current directory, ${{ github.workspace }}'
                   ls
-            
-            # Upload Build files
-            - if: runner.os == "ubuntu-latest"
-              name: Upload a Build Artifact
-              uses: actions/upload-pages-artifact@v1
-              with:
-                path: ./
+                  echo 'Commit and push the changes to the gh-pages branch in the repo'
+                  git add .
+                  git commit -m "Compiled new build files"
+                  git push origin gh-pages
+
+    
+    # Upload Build files
+    build-and-upload-artifact:
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+              - uses: actions/checkout@v3
+                with:
+                    ref: gh-pages
+              - name: Upload a Build Artifact
+                uses: actions/upload-pages-artifact@v1
+                with:
+                    path: ./ 
 
     # Deploy job
     deploy:
